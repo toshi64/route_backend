@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
-from openai import APIError  # ← こちらが正しいエラークラス
+from openai import OpenAI, OpenAIError
 
 def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
     """
@@ -34,7 +33,7 @@ def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
         print(f"生成されたコンテンツ:\n{result}")
         return result
 
-    except APIError as e:
+    except OpenAIError as e:
         print("ChatGPT API呼び出し中にエラーが発生しました。")
         print(f"エラー内容: {e}")
         return None
