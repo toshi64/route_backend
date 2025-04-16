@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from openai.types import OpenAIError
+from openai import OpenAIError
 
 def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
     """
