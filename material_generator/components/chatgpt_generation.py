@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 
-def generate_text(user_prompt: str, system_prompt: str) -> str:
+def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
     """
     ChatGPT APIを呼び出し、ユーザープロンプトとシステムプロンプトを基に
     英文を生成する関数。
