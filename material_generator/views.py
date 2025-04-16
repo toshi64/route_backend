@@ -3,6 +3,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from .components.parse_json import parse_json_request
 from .components.user_prompt_generation import generate_user_prompt
+from .components.system_prompt_definition import define_system_prompt
 
 @csrf_exempt
 def generate_text(request):
@@ -17,7 +18,10 @@ def generate_text(request):
 
             prompt = generate_user_prompt(data)
             print("生成されたユーザープロンプト：\n", prompt)  # レンダーログに出力
-            
+
+            system_prompt = define_system_prompt()
+            print("システムプロンプト：\n", system_prompt)
+
             return JsonResponse({"message": "プロンプト生成完了"})
 
         else:
