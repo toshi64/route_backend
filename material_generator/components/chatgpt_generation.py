@@ -1,14 +1,14 @@
 import os
-from openai import OpenAI
 from dotenv import load_dotenv
-from openai import OpenAIError
+from openai import OpenAI
+from openai import APIError  # ← こちらが正しいエラークラス
 
 def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
     """
     ChatGPT APIを呼び出し、ユーザープロンプトとシステムプロンプトを基に
     英文を生成する関数。デバッグ用にprintを追加。
     """
-    load_dotenv() 
+    load_dotenv()
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -19,7 +19,7 @@ def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # または "gpt-4"
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -29,10 +29,12 @@ def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
         )
         print("ChatGPT API呼び出し成功！")
         print(f"レスポンス全文:\n{response}")
-        result = response['choices'][0]['message']['content']
+        
+        result = response.choices[0].message.content  # ← v1.0系ではこのアクセス方法
         print(f"生成されたコンテンツ:\n{result}")
         return result
-    except OpenAIError as e:
+
+    except APIError as e:
         print("ChatGPT API呼び出し中にエラーが発生しました。")
         print(f"エラー内容: {e}")
         return None
