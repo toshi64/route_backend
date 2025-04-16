@@ -2,6 +2,7 @@ from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
 from .components.parse_json import parse_json_request
+from .components.user_prompt_generation import generate_user_prompt
 
 @csrf_exempt
 def generate_text(request):
@@ -14,11 +15,10 @@ def generate_text(request):
             if data is None:
                 return JsonResponse({'error': 'JSONパースに失敗しました'}, status=400)
 
-            print("新しい dict 形式で体験用データを受け取りました:", data)
-            return JsonResponse({
-                'message': '新しい dict 形式で体験用データを受け取りました',
-                'data': data
-            })
+            prompt = generate_user_prompt(data)
+            print("生成されたユーザープロンプト：\n", prompt)  # レンダーログに出力
+            
+            return JsonResponse({"message": "プロンプト生成完了"})
 
         else:
             return JsonResponse({
