@@ -1,21 +1,24 @@
 import os
-import openai
+from openai import OpenAI
+from dotenv import load_dotenv
+from openai.types import OpenAIError
 
 def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
     """
     ChatGPT APIを呼び出し、ユーザープロンプトとシステムプロンプトを基に
     英文を生成する関数。デバッグ用にprintを追加。
     """
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    load_dotenv() 
+
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     print("=== ChatGPT API デバッグ情報 ===")
-    print(f"APIキーは設定されていますか？: {bool(openai.api_key)}")
     print(f"受け取ったユーザープロンプト:\n{user_prompt}")
     print(f"受け取ったシステムプロンプト:\n{system_prompt}")
     print("ChatGPT API呼び出しを開始します...")
 
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",  # または "gpt-4"
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -29,7 +32,7 @@ def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
         result = response['choices'][0]['message']['content']
         print(f"生成されたコンテンツ:\n{result}")
         return result
-    except openai.error.OpenAIError as e:
+    except OpenAIError as e:
         print("ChatGPT API呼び出し中にエラーが発生しました。")
         print(f"エラー内容: {e}")
         return None
