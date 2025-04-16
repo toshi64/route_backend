@@ -7,7 +7,7 @@ def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
     英文を生成する関数。
     """
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    
+
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # または "gpt-4"
@@ -20,5 +20,5 @@ def call_chatgpt_api(user_prompt: str, system_prompt: str) -> str:
         )
         return response['choices'][0]['message']['content']
     except openai.error.OpenAIError as e:
-        print(f"ChatGPT API呼び出し中にエラーが発生しました: {e}")
+        print(f"ChatGPT API呼び出し中にエラーが発生しまし: {e}")
         return None
