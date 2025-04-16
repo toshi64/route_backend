@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .components.parse_json import parse_json_request
 from .components.user_prompt_generation import generate_user_prompt
 from .components.system_prompt_definition import define_system_prompt
+from .components.chatgpt_generation import generate_text
 
 @csrf_exempt
 def generate_text(request):
@@ -22,12 +23,11 @@ def generate_text(request):
             system_prompt = define_system_prompt()
             print("システムプロンプト：\n", system_prompt)
 
-            return JsonResponse({"message": "プロンプト生成完了"})
+            generated_text = generate_text(prompt, system_prompt)
 
-        else:
-            return JsonResponse({
-                'error': 'このソースは未対応です（GAS以外）',
-                'source': source
-            }, status=400)
+            if generated_text:
+             return JsonResponse({"generated_text": generated_text})
+            else:
+             return JsonResponse({"error": "ChatGPT API呼び出しに失敗しました"}, status=500)
     
     return JsonResponse({'error': 'POSTメソッドで送信してください'}, status=405)
