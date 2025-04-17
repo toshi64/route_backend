@@ -12,22 +12,22 @@ def generate_text(request):
         # スコープ①：体験か熟成かを識別（例：ヘッダーに識別子を含める）
         source = request.headers.get("X-Source-Type", "unknown")
 
-        if source == "GAS":  # 体験用として処理
-            data = parse_json_request(request)
-            if data is None:
+        if source == "GAS":
+            material_dict = parse_json_request(request)
+            if material_dict is None:
                 return JsonResponse({'error': 'JSONパースに失敗しました'}, status=400)
 
-            prompt = generate_user_prompt(data)
-            print("生成されたユーザープロンプト：\n", prompt)  # レンダーログに出力
+            material_dict = generate_user_prompt(material_dict)
+            print("生成されたユーザープロンプト：\n", material_dict["user_prompt"])
 
             system_prompt = define_system_prompt()
             print("システムプロンプト：\n", system_prompt)
 
-            generated_text = call_chatgpt_api(prompt, system_prompt)
+            material_dict = call_chatgpt_api(material_dict, system_prompt)
 
-            if generated_text:
-             return JsonResponse({"generated_text": generated_text})
+            if "generated_text" in material_dict:
+                return JsonResponse(material_dict)
             else:
-             return JsonResponse({"error": "ChatGPT API呼び出しに失敗しました"}, status=500)
+                return JsonResponse({"error": "ChatGPT API呼び出しに失敗しました"}, status=500)
     
     return JsonResponse({'error': 'POSTメソッドで送信してください'}, status=405)
