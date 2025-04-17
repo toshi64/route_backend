@@ -25,7 +25,7 @@ def generate_text(request):
 
             material_dict = call_chatgpt_api(material_dict, system_prompt)
 
-            if "generated_text" in material_dict:
+            if "text" in material_dict:
                 return JsonResponse(material_dict)
             else:
                 return JsonResponse({"error": "ChatGPT API呼び出しに失敗しました"}, status=500)

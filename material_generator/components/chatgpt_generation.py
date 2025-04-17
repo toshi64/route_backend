@@ -33,7 +33,6 @@ def call_chatgpt_api(material_dict: dict, system_prompt: str) -> dict:
 
         # dictに追加して返す
         material_dict["text"] = long_text
-        print(material_dict)
         return material_dict
 
     except OpenAIError as e:
