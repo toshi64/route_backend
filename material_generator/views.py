@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 import json
+import copy
 from django.views.decorators.csrf import csrf_exempt
 from .components.parse_json import parse_json_request
 from .components.user_prompt_generation import generate_user_prompt
@@ -23,20 +24,19 @@ def generate_text(request):
                 return JsonResponse({'error': 'JSONパースに失敗しました'}, status=400)
 
             material_dict = generate_user_prompt(material_dict)
-            print("生成されたユーザープロンプト：\n", material_dict["user_prompt"])
-
             system_prompt = define_system_prompt()
-            print("システムプロンプト：\n", system_prompt)
+            
+            materials_list = []
+            for i in range(3):
+                print(f"--- 教材 {i+1} を生成中 ---")
 
-            material_dict = call_chatgpt_api(material_dict, system_prompt)
-            material_dict = generate_title(material_dict)
-            material_dict = translate_title(material_dict)
-            material_dict = generate_summary(material_dict)
-            material_dict = translate_summary(material_dict)
+                temp_dict = copy.deepcopy(material_dict)
+                temp_dict = call_chatgpt_api(temp_dict, system_prompt)
+                temp_dict = generate_title(temp_dict)
+                temp_dict = translate_title(temp_dict)
+                temp_dict = generate_summary(temp_dict)
+                temp_dict = translate_summary(temp_dict)
 
-            if "text" in material_dict:
-                return JsonResponse(material_dict)
-            else:
-                return JsonResponse({"error": "ChatGPT API呼び出しに失敗しました"}, status=500)
-    
-    return JsonResponse({'error': 'POSTメソッドで送信してください'}, status=405)
+                materials_list.append(temp_dict)
+
+            return JsonResponse({"materials": materials_list}, json_dumps_params={"ensure_ascii": False})

@@ -1,13 +1,58 @@
+import json
+import copy
+from components.parse_json import parse_json_request
+from components.user_prompt_generation import generate_user_prompt
+from components.system_prompt_definition import define_system_prompt
+from components.chatgpt_generation import call_chatgpt_api
 from components.title_generation import generate_title
 from components.title_translation import translate_title
 from components.summary_generation import generate_summary
 from components.summary_translation import translate_summary
 
-# 長文付きのmaterial_dictを使ってタイトルを生成
-material_dict = {'id': 45621, 'data': {'タイムスタンプ': '2025-04-15T08:08:46.000Z', 'Q1. 興味のあるテーマを選んでください（複数選択可）': 'お金・仕事・ビジネス・副業', 'Q2. 特に気になる具体的なモノ・人・話題があれば教えてください（自由記述）': 'ビジネスマンになりたい', 'Q3. それについて、どんな内容が読めるとおもしろそうですか？（複数選択可）': '海外での評価・人気の理由', ' Q4. 英語で読めたら「おっ」と思う内容って、他にありますか？（自由記述・任意）': 'ない', 'Q5. 英語の長さ・難しさについてどう思いますか？（1つ選択）': '短くてやさしいほうがいい（200〜300語）', 'user_id': 45621}, 'user_prompt': '以下は生徒がGoogleフォームで回答した英文に対する興味のデータです。\nこれを元に英文を作ってください。\n\nタイムスタンプ：2025-04-15T08:08:46.000ZnQ1. 興味のあるテーマを選んでください（複数選択可）：お金・仕事・ビジネス・副業nQ2. 特に気になる具体的なモノ・人・話題があれば教えてください（自由記述）：ビジネスマンになりたいnQ3. それについて、どんな内容が読めるとおもしろそうですか？（複数選択可）：海外での評価・人気の理由n Q4. 英語で読めたら「おっ」と思う内容って、他にありますか？（自由記述・任意）：ないnQ5. 英語の長さ・難しさについてどう思いますか？（1つ選択）：短くてやさしいほうがいい（200〜300語）nuser_id：45621n', 'text': "In the bustling city of New York, there was a young man named Alex who had a burning desire to become a successful businessman. Ever since he was a child, Alex had admired the sharp suits, confident demeanor, and fast-paced lifestyle of business executives he saw in movies and magazines. He yearned to be one of them, making deals, traveling the world, and living a life of luxury.\n\nOne day, as Alex was scrolling through social media, he came across an article about a renowned businessman who had built a global empire from scratch. Intrigued, Alex clicked on the link and delved into the story of this self-made tycoon. The article detailed how the businessman had started with just a small idea and a lot of determination, eventually expanding his business to all corners of the globe.\n\nWhat fascinated Alex the most was the section about how the businessman was perceived and admired in foreign countries. The article discussed how his innovative ideas, ethical business practices, and charisma had earned him not only success but also respect and admiration worldwide. Alex couldn't help but be inspired by this story of determination, hard work, and global impact.\n\nAs he read on, Alex imagined himself in the shoes of this successful businessman, jetting off to meetings in Paris, sealing deals in Tokyo, and giving motivational speeches in London. The thought sent a shiver of excitement down his spine. He realized that becoming a businessman wasn't just about making money; it was about making a difference, leaving a mark on the world, and being recognized for your contributions.\n\nWith newfound determination, Alex set out on his own journey to become a businessman. He started taking business courses, networking with industry professionals, and honing his skills in negotiation and leadership. He knew the road ahead would be tough, with challenges and setbacks along the way, but he also knew that with hard work, perseverance, and a clear vision, he could achieve his dream.\n\nAs the sun set over the city, casting a golden glow over the skyscrapers, Alex made a promise to himself: he would become a successful businessman, not just for the money or the status, but to make a difference in the world and leave a legacy that would be remembered for generations to come. And with that, he took his first step towards his dream, fueled by passion, determination, and the unwavering belief that anything was possible if you put your mind to it."}
+# --- 初期素材となるmaterial_dictを定義 ---
+material_dict = {
+    "id": "abc123",
+    "data": {
+        "user_id": "abc123",
+        "name": "Toshiki",
+        "interests": ["tech", "education", "startups"]
+    }
+}
 
-material_dict = generate_title(material_dict)
-material_dict = translate_title(material_dict)
-material_dict = generate_summary(material_dict)
-material_dict = translate_summary(material_dict)
+# ユーザープロンプトを生成
+material_dict = generate_user_prompt(material_dict)
 
+# システムプロンプト定義
+system_prompt = define_system_prompt()
+
+# --- 教材セットを3本分生成 ---
+materials_list = []
+
+for i in range(3):
+    print(f"\n--- 教材 {i+1} を生成中 ---")
+
+    temp_dict = copy.deepcopy(material_dict)
+
+    # 本文生成
+    temp_dict = call_chatgpt_api(temp_dict, system_prompt)
+
+    # タイトル生成
+    temp_dict = generate_title(temp_dict)
+
+    # タイトル翻訳
+    temp_dict = translate_title(temp_dict)
+
+    # 要約生成
+    temp_dict = generate_summary(temp_dict)
+
+    # 要約翻訳
+    temp_dict = translate_summary(temp_dict)
+
+    # 完成教材としてリストに追加
+    materials_list.append(temp_dict)
+
+# --- 完成した教材セットを表示 ---
+print("\n=== 最終出力された教材セット ===")
+for idx, mat in enumerate(materials_list):
+    print(f"\n--- 教材 {idx+1} ---")
+    print(json.dumps(mat, indent=2, ensure_ascii=False))
