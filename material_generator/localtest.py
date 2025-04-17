@@ -1,41 +1,13 @@
-import json
-from components.parse_json import parse_json_request
-from components.user_prompt_generation import generate_user_prompt
-from components.chatgpt_generation import call_chatgpt_api
+from components.title_generation import generate_title
+from components.title_translation import translate_title
+from components.summary_generation import generate_summary
+from components.summary_translation import translate_summary
 
-# ダミーの request オブジェクトを作成
-class DummyRequest:
-    def __init__(self, json_dict):
-        self.body = json.dumps(json_dict).encode('utf-8')
+# 長文付きのmaterial_dictを使ってタイトルを生成
+material_dict = {'id': 45621, 'data': {'タイムスタンプ': '2025-04-15T08:08:46.000Z', 'Q1. 興味のあるテーマを選んでください（複数選択可）': 'お金・仕事・ビジネス・副業', 'Q2. 特に気になる具体的なモノ・人・話題があれば教えてください（自由記述）': 'ビジネスマンになりたい', 'Q3. それについて、どんな内容が読めるとおもしろそうですか？（複数選択可）': '海外での評価・人気の理由', ' Q4. 英語で読めたら「おっ」と思う内容って、他にありますか？（自由記述・任意）': 'ない', 'Q5. 英語の長さ・難しさについてどう思いますか？（1つ選択）': '短くてやさしいほうがいい（200〜300語）', 'user_id': 45621}, 'user_prompt': '以下は生徒がGoogleフォームで回答した英文に対する興味のデータです。\nこれを元に英文を作ってください。\n\nタイムスタンプ：2025-04-15T08:08:46.000ZnQ1. 興味のあるテーマを選んでください（複数選択可）：お金・仕事・ビジネス・副業nQ2. 特に気になる具体的なモノ・人・話題があれば教えてください（自由記述）：ビジネスマンになりたいnQ3. それについて、どんな内容が読めるとおもしろそうですか？（複数選択可）：海外での評価・人気の理由n Q4. 英語で読めたら「おっ」と思う内容って、他にありますか？（自由記述・任意）：ないnQ5. 英語の長さ・難しさについてどう思いますか？（1つ選択）：短くてやさしいほうがいい（200〜300語）nuser_id：45621n', 'text': "In the bustling city of New York, there was a young man named Alex who had a burning desire to become a successful businessman. Ever since he was a child, Alex had admired the sharp suits, confident demeanor, and fast-paced lifestyle of business executives he saw in movies and magazines. He yearned to be one of them, making deals, traveling the world, and living a life of luxury.\n\nOne day, as Alex was scrolling through social media, he came across an article about a renowned businessman who had built a global empire from scratch. Intrigued, Alex clicked on the link and delved into the story of this self-made tycoon. The article detailed how the businessman had started with just a small idea and a lot of determination, eventually expanding his business to all corners of the globe.\n\nWhat fascinated Alex the most was the section about how the businessman was perceived and admired in foreign countries. The article discussed how his innovative ideas, ethical business practices, and charisma had earned him not only success but also respect and admiration worldwide. Alex couldn't help but be inspired by this story of determination, hard work, and global impact.\n\nAs he read on, Alex imagined himself in the shoes of this successful businessman, jetting off to meetings in Paris, sealing deals in Tokyo, and giving motivational speeches in London. The thought sent a shiver of excitement down his spine. He realized that becoming a businessman wasn't just about making money; it was about making a difference, leaving a mark on the world, and being recognized for your contributions.\n\nWith newfound determination, Alex set out on his own journey to become a businessman. He started taking business courses, networking with industry professionals, and honing his skills in negotiation and leadership. He knew the road ahead would be tough, with challenges and setbacks along the way, but he also knew that with hard work, perseverance, and a clear vision, he could achieve his dream.\n\nAs the sun set over the city, casting a golden glow over the skyscrapers, Alex made a promise to himself: he would become a successful businessman, not just for the money or the status, but to make a difference in the world and leave a legacy that would be remembered for generations to come. And with that, he took his first step towards his dream, fueled by passion, determination, and the unwavering belief that anything was possible if you put your mind to it."}
 
-# 擬似的なリクエストデータ（user_id が含まれている想定）
-dummy_data = {
-    "user_id": "abc123",
-    "name": "Toshiki",
-    "interests": ["tech", "education", "startups"]
-}
+material_dict = generate_title(material_dict)
+material_dict = translate_title(material_dict)
+material_dict = generate_summary(material_dict)
+material_dict = translate_summary(material_dict)
 
-# DummyRequest を使って parse 関数をテスト
-request = DummyRequest(dummy_data)
-parsed_result = parse_json_request(request)
-
-# 出力を確認
-print("=== parse_json_request 結果 ===")
-print(parsed_result)
-
-# ユーザープロンプトを生成
-user_prompt = generate_user_prompt(parsed_result)
-
-print("\n=== generate_user_prompt 結果 ===")
-print(user_prompt)
-
-# システムプロンプト（簡易版をここで仮定）
-system_prompt = (
-    "あなたは優秀な英語教材作成AIです。生徒の興味に基づき、魅力的でわかりやすい英語長文を作成してください。"
-    "構成は中高生向けで約1000語。専門用語の使用は控え、親しみやすい内容でお願いします。"
-)
-
-# ChatGPT API を呼び出して本文を生成し、parsed_result に追加
-parsed_result = call_chatgpt_api(parsed_result, system_prompt)
-print("\n=== call_chatgpt_api 結果 ===")
-print(parsed_result)
