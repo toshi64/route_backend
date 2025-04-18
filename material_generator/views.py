@@ -10,6 +10,7 @@ from .components.title_generation import generate_title
 from .components.title_translation import translate_title
 from .components.summary_generation import generate_summary
 from .components.summary_translation import translate_summary
+from .components.save_to_supabase import save_to_supabase 
 
 
 @csrf_exempt
@@ -26,17 +27,14 @@ def generate_text(request):
             material_dict = generate_user_prompt(material_dict)
             system_prompt = define_system_prompt()
             
-            materials_list = []
-            for i in range(3):
-                print(f"--- 教材 {i+1} を生成中 ---")
+            material_dict = call_chatgpt_api(material_dict, system_prompt)
+            material_dict = generate_title(material_dict)
+            material_dict = translate_title(material_dict)
+            material_dict = generate_summary(material_dict)
+            material_dict = translate_summary(material_dict)
 
-                temp_dict = copy.deepcopy(material_dict)
-                temp_dict = call_chatgpt_api(temp_dict, system_prompt)
-                temp_dict = generate_title(temp_dict)
-                temp_dict = translate_title(temp_dict)
-                temp_dict = generate_summary(temp_dict)
-                temp_dict = translate_summary(temp_dict)
+            save_to_supabase(material_dict)
 
-                materials_list.append(temp_dict)
+            return JsonResponse({"material": material_dict}, json_dumps_params={"ensure_ascii": False})
 
-            return JsonResponse({"materials": materials_list}, json_dumps_params={"ensure_ascii": False})
+        return JsonResponse({'error': '不正なソースタイプです'}, status=400)
