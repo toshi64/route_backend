@@ -166,5 +166,42 @@ print("✅ テストデータをSupabaseに保存しました！")
 | `SUPABASE_URL`          | SupabaseのプロジェクトURL         |
 | `SUPABASE_KEY`          | Supabaseのサービスロールキー（秘密） |
 
+
 ---
 
+## 🧩 11. 接続方式の違いに注意！（Direct と Pooler）
+
+Render で接続エラーが発生した原因は、**Supabaseの接続方式による違い**にありました。
+
+### 🔄 問題の本質：
+Supabaseの接続には大きく分けて2種類の方式があります：
+
+| 接続方式             | ホスト名例                                           | ポート | USER名の例                     |
+|----------------------|------------------------------------------------------|--------|-------------------------------|
+| **Direct Connection**| `db.abc123xyz.supabase.co`                           | 5432   | `postgres`                    |
+| **Transaction Pooler**| `aws-0-ap-northeast-1.pooler.supabase.com` など     | 6543   | `postgres.abc123xyz` の形式   |
+
+### 😱 よくある落とし穴：
+
+- `DB_HOST` と `DB_PORT` は変えたのに、**`DB_USER` を変えていなかった**ことでエラーに。
+- Transaction Pooler を使う場合、**ユーザー名が `postgres.プロジェクトID` という形式**である必要があります。
+
+### ✅ 解決策：
+
+`.env`やRender環境変数において、**接続方式に応じて3つすべての値**を確認・一致させてください：
+
+```env
+SUPABASE_DB_HOST=aws-0-ap-northeast-1.pooler.supabase.com
+SUPABASE_DB_PORT=6543
+SUPABASE_DB_USER=postgres.abc123xyz   ← Project IDが含まれている！
+```
+
+> Supabase ダッシュボード「Connect > Connection string」からコピペで確認できます。
+
+---
+
+### 💡補足：
+- **ローカルではDirectでOKでも、本番(Render)ではPooler推奨**のケースが多いです。
+- Supabaseの無料プランでは、DirectはIPv6のみ・PoolerはIPv4対応という違いも。
+
+---
