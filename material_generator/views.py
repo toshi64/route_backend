@@ -38,3 +38,19 @@ def generate_text(request):
             return JsonResponse({"material": material_dict}, json_dumps_params={"ensure_ascii": False})
 
         return JsonResponse({'error': '不正なソースタイプです'}, status=400)
+    
+
+def sample_materials(request):
+    data = [
+         {
+                "id": 1,
+                "title": "Sample Title 1",
+                "summary": "This is a sample summary.",
+            },
+            {
+                "id": 2,
+                "title": "Sample Title 2",
+                "summary": "Another example summary.",
+        }
+        ]
+    return JsonResponse(data, safe=False)
