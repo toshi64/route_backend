@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 import json
 import copy
 from django.views.decorators.csrf import csrf_exempt
@@ -11,6 +12,9 @@ from .components.title_translation import translate_title
 from .components.summary_generation import generate_summary
 from .components.summary_translation import translate_summary
 from .components.save_to_supabase import save_to_supabase 
+from .models import Material
+from supabase import create_client, Client
+from django.conf import settings
 
 
 @csrf_exempt
@@ -40,17 +44,25 @@ def generate_text(request):
         return JsonResponse({'error': '不正なソースタイプです'}, status=400)
     
 
-def sample_materials(request):
-    data = [
-         {
-                "id": 1,
-                "title": "Sample Title 1",
-                "summary": "This is a sample summary.",
-            },
-            {
-                "id": 2,
-                "title": "Sample Title 2",
-                "summary": "Another example summary.",
-        }
-        ]
-    return JsonResponse(data, safe=False)
+url = settings.SUPABASE_URL
+key = settings.SUPABASE_KEY
+supabase: Client = create_client(url, key)
+
+def get_material(request, material_id):
+    response = supabase.table("material_generator_material").select("*").eq("id", material_id).single().execute()
+    
+    if response.data is None:
+        return JsonResponse({'error': '教材が見つかりませんでした'}, status=404)
+
+    material = response.data
+
+    data = {
+        "id": material["id"],
+        "title": material["title"],
+        "title_ja": material["title_ja"],
+        "summary": material["summary"],
+        "summary_ja": material["summary_ja"],
+        "text": material["text"],
+    }
+
+    return JsonResponse(data, json_dumps_params={"ensure_ascii": False})

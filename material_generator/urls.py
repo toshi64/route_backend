@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('generate/', views.generate_text, name='generate_text'),
-    path("sample/", views.sample_materials),
+    path('material/<int:material_id>/', views.get_material, name='get_material'),
 ]
