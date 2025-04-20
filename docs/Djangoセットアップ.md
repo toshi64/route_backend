@@ -65,3 +65,4 @@ Djangoプロジェクト内で新しいアプリを作成し、`settings.py` の
 
 ## 17. Renderへの接続
 Renderにプロジェクトを接続し、デプロイを行います。
+環境変数へのSECRET_KEYの登録を忘れずに。
