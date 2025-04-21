@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 import json
 # Create your views here.
 
@@ -60,3 +61,12 @@ def logout_view(request):
         logout(request)
         return JsonResponse({'message': 'Logged out'}, status=200)
     return JsonResponse({'error': 'POST only'}, status=405)
+
+@login_required
+def me_view(request):
+    user = request.user
+    return JsonResponse({
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+    })
