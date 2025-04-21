@@ -3,8 +3,27 @@
 ## 概要
 このドキュメントでは、Djangoプロジェクトの立ち上げからRenderへのデプロイまでの手順を説明します。
 
+## 0. 使用するPythonとDjangoのバージョン確認（初期段階で必須）
+
+開発前に、使用したい Django のバージョンが、現在の Python バージョンと互換性があるか確認しておきます。  
+仮想環境は **対応する Python のバージョンで作成**するようにしましょう。
+
+### 🔸 例：
+
+- Django 5.0 以上 → Python 3.10〜3.12 が必要
+- Django 4.2 → Python 3.8〜3.11
+
+# 現在のPythonバージョン確認
+python --version
+
+# 必要に応じて pyenv などで切り替え
+pyenv install 3.12.2
+pyenv local 3.12.2
+
+
 ## 1. 仮想環境の作成
 ローカルで仮想環境を作成し、必要なパッケージをインストールします。
+
 
 ## 2. Djangoのインストール
 仮想環境内でDjangoをインストールします。
@@ -22,6 +41,44 @@ Djangoの管理サイトが正常に動作するか確認します。
 
 ## 6. アプリの作成
 Djangoプロジェクト内で新しいアプリを作成し、`settings.py` の `INSTALLED_APPS` に追加します。
+
+## 6.5 カスタムユーザーモデルの設定（初期段階で必須）【追記】
+
+Djangoで独自のユーザーモデル（メールログインなど）を使用する場合は、**必ず最初の段階で定義**しておく必要があります。あとから変更することはできません。
+
+1. 作成したアプリ（例：`accounts`）の中に `models.py` を作成し、以下を記述します：
+
+```python
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
+
+    def __str__(self):
+        return self.email
+```
+
+2. `settings.py` に以下を追加します：
+
+```python
+AUTH_USER_MODEL = 'accounts.CustomUser'
+```
+
+3. モデルのマイグレーションを反映します：
+
+```bash
+python manage.py makemigrations accounts
+python manage.py migrate
+```
+
+> 🔸 注意：この設定は、**プロジェクト作成直後、最初のマイグレーション前に必ず行ってください。**
+```
+
+---
 
 ## 7. ルーティングの設定
 - プロジェクトの `urls.py` でアプリのURLを指定します。
