@@ -62,11 +62,12 @@ def logout_view(request):
         return JsonResponse({'message': 'Logged out'}, status=200)
     return JsonResponse({'error': 'POST only'}, status=405)
 
-@login_required
 def me_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'ログインしていません'}, status=401)
+
     user = request.user
     return JsonResponse({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
+        "username": user.username,
+        "email": user.email
     })
