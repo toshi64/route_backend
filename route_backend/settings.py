@@ -155,10 +155,11 @@ SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
+     "https://route-frontend-teal.vercel.app",
 ]
 
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_NAME = "csrftoken" 
 
