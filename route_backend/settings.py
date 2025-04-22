@@ -144,7 +144,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # 開発用Next.js（ローカル）
-    "https://route-frontend-example.vercel.app",  # ←仮の本番Next.jsがある場合はこちらも入れる
+    "https://route-frontend-teal.vercel.app/",  # ←仮の本番Next.jsがある場合はこちらも入れる
 ]
 
 CORS_ALLOW_CREDENTIALS = True
