@@ -158,7 +158,7 @@ CSRF_TRUSTED_ORIGINS = [
      "https://route-frontend-teal.vercel.app",
 ]
 
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_NAME = "csrftoken" 
