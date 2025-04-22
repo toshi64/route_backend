@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CustomUserSerializer
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 
 # Create your views here.
@@ -43,7 +44,10 @@ def signup_view(request):
 
     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
-@csrf_exempt
+
+@ensure_csrf_cookie
+@api_view(['POST'])
+@permission_classes([])
 def login_view(request):
     if request.method == 'POST':
         try:
