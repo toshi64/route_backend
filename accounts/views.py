@@ -4,6 +4,13 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import CustomUserSerializer
+
+
 # Create your views here.
 
 
@@ -63,13 +70,18 @@ def logout_view(request):
     return JsonResponse({'error': 'POST only'}, status=405)
 
 
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
 def me_view(request):
-    print(request.user)
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'ログインしていません'}, status=401)
-
     user = request.user
-    return JsonResponse({
-        "username": user.username,
-        "email": user.email
-    })
+
+    if request.method == 'GET':
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)
+
+    elif request.method == 'PATCH':
+        serializer = CustomUserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'material_generator',
     'corsheaders',
     'accounts',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -152,8 +153,13 @@ CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
+
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SECURE = False
-
+CSRF_COOKIE_HTTPONLY = False  
+CSRF_COOKIE_NAME = "csrftoken" 
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
