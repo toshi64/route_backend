@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -59,7 +60,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'route_backend.urls'
@@ -153,13 +153,13 @@ CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
 
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
      "https://route-frontend-teal.vercel.app",
 ]
-
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_NAME = "csrftoken" 
 
