@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import get_user_model, authenticate, login, logout
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.decorators import login_required
 import json
 from rest_framework.decorators import api_view, permission_classes
@@ -46,25 +46,29 @@ def signup_view(request):
 
 
 @ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'message': 'CSRF cookie set'})
+
+
+
+@csrf_protect
 @api_view(['POST'])
 @permission_classes([])
 def login_view(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            email = data.get('email')
-            password = data.get('password')
+    try:
+        data = request.data  # JSONパース済み
+        email = data.get('email')
+        password = data.get('password')
 
-            user = authenticate(request, email=email, password=password)
-            if user is not None:
-                login(request, user)
-                return JsonResponse({'message': 'Login successful'}, status=200)
-            else:
-                return JsonResponse({'error': 'Invalid credentials'}, status=401)
-
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-    return JsonResponse({'error': 'POST only'}, status=405)
+        user = authenticate(request, email=email, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'message': 'Login successful'}, status=200)
+        else:
+            return JsonResponse({'error': 'Invalid credentials'}, status=401)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    
 
 @csrf_exempt
 def logout_view(request):
@@ -74,6 +78,7 @@ def logout_view(request):
     return JsonResponse({'error': 'POST only'}, status=405)
 
 
+@ensure_csrf_cookie
 @api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 def me_view(request):
