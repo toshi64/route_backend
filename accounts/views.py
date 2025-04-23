@@ -47,6 +47,7 @@ def signup_view(request):
 
 @ensure_csrf_cookie
 def get_csrf_token(request):
+    print("✅ get_csrf_token called — CSRF cookie should be set if not present.")
     return JsonResponse({'message': 'CSRF cookie set'})
 
 
