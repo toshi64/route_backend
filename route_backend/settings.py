@@ -145,20 +145,23 @@ CORS_ALLOW_ALL_ORIGINS = False
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # 開発用Next.js（ローカル）
-    "https://route-frontend-teal.vercel.app",  # ←仮の本番Next.jsがある場合はこちらも入れる
+    "https://route-frontend-teal.vercel.app", 
+    "https://app.route-web.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
-SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False") == "True"
+SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true"
 
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = os.environ.get("CSRF_COOKIE_SECURE", "False") == "True"
+CSRF_COOKIE_SAMESITE = os.getenv("CSRF_COOKIE_SAMESITE", "Lax")
+CSRF_COOKIE_SECURE = os.getenv("CSRF_COOKIE_SECURE", "False").lower() == "true"
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
      "https://route-frontend-teal.vercel.app",
+     "https://app.route-web.com",
+    
 ]
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_NAME = "csrftoken" 
