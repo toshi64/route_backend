@@ -33,7 +33,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['.onrender.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['.onrender.com', '127.0.0.1', 'localhost','api.route-web.com', 'app.route-web.com' ]
 
 
 # Application definition
@@ -165,6 +165,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_NAME = "csrftoken" 
+
 SESSION_COOKIE_DOMAIN = ".route-web.com"
 CSRF_COOKIE_DOMAIN = ".route-web.com"
 
