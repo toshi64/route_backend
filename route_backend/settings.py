@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'rest_framework',
+    'instant_feedback',
 ]
 
 MIDDLEWARE = [
@@ -166,7 +167,8 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_NAME = "csrftoken" 
 
-SESSION_COOKIE_DOMAIN = ".route-web.com"
-CSRF_COOKIE_DOMAIN = ".route-web.com"
+SESSION_COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
+CSRF_COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
+
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
