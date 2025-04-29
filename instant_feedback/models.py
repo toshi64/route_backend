@@ -10,6 +10,7 @@ class Session(models.Model):
         on_delete=models.CASCADE,
         related_name='sessions'
     )
+    session_id = models.CharField(max_length=100, unique=True)
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
 

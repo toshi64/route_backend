@@ -172,3 +172,17 @@ CSRF_COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
 
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',  # ★ INFO以上をコンソールに出す
+    },
+}

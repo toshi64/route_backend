@@ -1,4 +1,4 @@
-# components/system_prompt_definition.py
+
 
 def define_system_prompt() -> str:
     """
