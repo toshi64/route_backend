@@ -10,7 +10,8 @@ def save_answer_unit(data: dict, user) -> str:
 
     try:
         # セッションを取得
-        session = Session.objects.get(id=data['session_id'], user=user)
+        session = Session.objects.get(session_id=data['session_id'], user=user)
+
 
         # StudentAnswerUnitを作成して保存
         StudentAnswerUnit.objects.create(

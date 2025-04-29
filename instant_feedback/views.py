@@ -8,6 +8,8 @@ from .components.call_chatgpt_api import call_chatgpt_api
 from .components.save_to_database import save_answer_unit
 from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
+from django.utils import timezone
+from .models import Session
 
 logger = logging.getLogger(__name__)
 
@@ -69,3 +71,26 @@ def session_start(request):
         'analysis_session_id': session_id,
         'message': 'Session started successfully!'
     }, status=200)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def session_end(request):
+    user = request.user
+    data = request.data
+    session_id = data.get('session_id')
+
+    if not session_id:
+        return Response({'error': 'session_id is required.'}, status=400)
+
+    try:
+        # セッションを取得（ユーザー本人のものに限定）
+        session = Session.objects.get(session_id=session_id, user=user)
+    except Session.DoesNotExist:
+        return Response({'error': 'Session not found.'}, status=404)
+
+    # completed_atに現在時刻をセット
+    session.completed_at = timezone.now()
+    session.save()
+
+    return Response({'message': 'Session ended successfully.'}, status=200)

@@ -30,14 +30,18 @@ def signup_view(request):
                 return JsonResponse({'error': 'Email and password are required'}, status=400)
 
             user = User.objects.create_user(
-                username=email,  # ←これを追加！
+                username=email,
                 email=email,
                 password=password
             )
 
             login(request, user)
 
-            return JsonResponse({'message': 'User created successfully'}, status=201)
+            return JsonResponse({
+                'message': 'User created successfully',
+                'email': user.email,
+                'internal_id': str(user.internal_id)  # ★ 追加！
+            }, status=201)
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
@@ -64,7 +68,11 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user is not None:
             login(request, user)
-            return JsonResponse({'message': 'Login successful'}, status=200)
+            return JsonResponse({
+                'message': 'Login successful',
+                'email': user.email,
+                'internal_id': str(user.internal_id)  
+            }, status=200)
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=401)
     except Exception as e:
