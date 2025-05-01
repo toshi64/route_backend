@@ -33,3 +33,16 @@ class StudentAnswerUnit(models.Model):
 
     def __str__(self):
         return f"AnswerUnit {self.id} for Session {self.session.id}"
+    
+
+class MetaAnalysis(models.Model):
+    answer = models.OneToOneField(
+        'StudentAnswerUnit',
+        on_delete=models.CASCADE,
+        related_name='meta_analysis'
+    )
+    meta_text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"MetaAnalysis for AnswerUnit {self.answer.id}"

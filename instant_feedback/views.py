@@ -2,12 +2,19 @@ import logging
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from .components.get_context_data import get_context_data
 from .components.user_prompt_generation import generate_user_prompt
 from .components.system_prompt_definition import define_system_prompt
+from .components.generate_meta_userprompt import generate_meta_userprompt
+from .components.define_meta_systemprompt import define_meta_systemprompt
 from .components.call_chatgpt_api import call_chatgpt_api
+from .components.meta_call_chatgpt_api import meta_call_chatgpt_api
 from .components.save_to_database import save_answer_unit
+from .components.save_to_database import save_meta_analysis
 from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
+
+
 from django.utils import timezone
 from .models import Session
 
@@ -28,20 +35,34 @@ def submit_answer(request):
     for field in required_fields:
         if field not in data:
             return Response({'error': f'Missing field: {field}'}, status=400)
+        
 
-    # ユーザープロンプトを生成
+    # ユーザープロンプトを生
     data = generate_user_prompt(data)
 
+    past_context = get_context_data(session_id=data["session_id"], user=user)
     # システムプロンプトを定義
-    system_prompt = define_system_prompt()
+    system_prompt = define_system_prompt(past_context)
+    logger.info("=== システムプロンプトの内容 ===\n" + system_prompt)
 
     # ChatGPT APIを呼び出してフィードバックを生成
     data = call_chatgpt_api(data, system_prompt)
 
     # データベースに保存
-    save_status = save_answer_unit(data, user)
+    save_status, answer_unit = save_answer_unit(data, user)
 
-    # レスポンス
+    data = generate_meta_userprompt(data)  # ← 同じdataに追記
+    meta_systemprompt = define_meta_systemprompt(past_context)
+
+
+    data = meta_call_chatgpt_api(data, meta_systemprompt)
+        
+    if answer_unit:
+        meta_save_status = save_meta_analysis(answer_unit, data.get("meta_ai_feedback", ""))
+        logger.info(f"メタ分析保存ステータス: {meta_save_status}")
+
+
+        # レスポンス
     return Response({
     'ai_feedback': data.get('ai_feedback', None),
     'save_status': save_status,
@@ -94,3 +115,34 @@ def session_end(request):
     session.save()
 
     return Response({'message': 'Session ended successfully.'}, status=200)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def show_analysis(request):
+    user = request.user
+    session_id = request.query_params.get('session_id')
+
+    if not session_id:
+        return Response({'error': 'session_id is required'}, status=400)
+
+    context_data = get_context_data(session_id=session_id, user=user)
+
+    response_data = {
+        'answer_units': [
+            {
+                'question_text': unit.question_text,
+                'user_answer': unit.user_answer,
+                'ai_feedback': unit.ai_feedback,
+            }
+            for unit in context_data.get("answer_units", [])
+        ],
+        'meta_analyses': [
+            {
+                'meta_text': meta.meta_text,
+            }
+            for meta in context_data.get("meta_analyses", [])
+        ]
+    }
+
+    return Response(response_data, status=200)

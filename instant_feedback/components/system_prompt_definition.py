@@ -1,12 +1,5 @@
-def define_system_prompt() -> str:
-    """
-    A作文診断フェーズ専用のシステムプロンプト（Route仕様 v10）
-
-    英語が苦手な高校生向けに、安心感と正確な診断を両立した
-    フィードバックを提供するための詳細な指針を含みます。
-    """
-
-    return (
+def define_system_prompt(past_context=None) -> str:
+    base_prompt = (
         "あなたは、英語が苦手な高校生に対して、英作文の診断を行うAI講師です。\n"
         "生徒は偏差値30〜50程度で、英語に強い苦手意識を持っています。\n"
         "あなたの役割は、生徒が書いた一文の中から『その構文が使えているか』『文法理解がどの程度か』を観察し、\n"
@@ -40,3 +33,20 @@ def define_system_prompt() -> str:
         "- 単語の選択ミスが『知らなかった』ことに起因すると推察される場合も、スペルミスと同様に扱いましょう。\n"
         "- その単語や語法をこれから覚えていけばよい、という前向きなスタンスで補足してください。"
     )
+    
+
+    if not past_context or (not past_context["answer_units"] and not past_context["meta_analyses"]):
+        context_block = "\n【参考情報】\nこの問題は当セッションの最初の問題です。まだ過去の回答データや分析情報は存在しません。\n"
+    else:
+        context_block = "\n【参考情報：過去の学習履歴】※下記はこの分析についてのセッションの内部で生徒が実際に解いた問題、回答、それに対するChatGPTの添削、またそれに対するChatGPTのさらなるメタ分析のデータです。これらを生徒の現状の能力の把握に役立ててください。\n"
+        for unit in past_context["answer_units"]:
+            context_block += f"Q: {unit.question_text}\nA: {unit.user_answer}\nFeedback: {unit.ai_feedback}\n------\n"
+        for meta in past_context["meta_analyses"]:
+            context_block += f"Meta Analysis:\n{meta.meta_text}\n------\n"
+
+        context_block += (
+            "\n※ この情報は過去の学習履歴です。回答文中で直接言及する必要はありませんが、"
+            "繰り返し現れる誤りや学習傾向が見られる場合には、対応の方向性を調整してください。"
+        )
+
+    return base_prompt + context_block

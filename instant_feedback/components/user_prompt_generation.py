@@ -6,6 +6,7 @@ def generate_user_prompt(answer_dict: dict) -> dict:
     - 出力: 同じdictに'user_prompt'キーを追加して返す
     """
 
+    
     question_text = answer_dict.get("question_text", "")
     user_answer = answer_dict.get("user_answer", "")
 
