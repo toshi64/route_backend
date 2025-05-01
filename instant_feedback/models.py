@@ -46,3 +46,25 @@ class MetaAnalysis(models.Model):
 
     def __str__(self):
         return f"MetaAnalysis for AnswerUnit {self.answer.id}"
+
+
+class SurveyResponse(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='survey_responses')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    question_1 = models.TextField()
+    answer_1 = models.TextField()
+    question_2 = models.TextField()
+    answer_2 = models.TextField()
+    question_3 = models.TextField()
+    answer_3 = models.TextField()
+    question_4 = models.TextField()
+    answer_4 = models.TextField()
+    question_5 = models.TextField()
+    answer_5 = models.TextField()
+    question_6 = models.TextField()
+    answer_6 = models.TextField()
+
+    def __str__(self):
+        return f"Survey by {self.user} for session {self.session.session_id}"

@@ -13,12 +13,31 @@ from .components.save_to_database import save_answer_unit
 from .components.save_to_database import save_meta_analysis
 from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
+from .components.save_survey_response import save_survey_response
 
 
 from django.utils import timezone
 from .models import Session
 
 logger = logging.getLogger(__name__)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def submit_survey_response(request):
+    user = request.user
+    data = request.data
+
+    result = save_survey_response(data, user)
+
+    if result['status'] == 'error':
+        return Response({'error': result['message']}, status=400)
+
+    return Response({
+        'message': result['message'],
+        'survey_id': result['survey_id']
+    }, status=201)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
