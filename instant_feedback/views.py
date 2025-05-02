@@ -74,17 +74,6 @@ def submit_answer(request):
     else:
         logger.warning("answer_unit is None — メタ分析は実行されませんでした")
 
-    # data = generate_meta_userprompt(data)  # ← 同じdataに追記
-    # meta_systemprompt = define_meta_systemprompt(past_context)
-
-
-    # data = meta_call_chatgpt_api(data, meta_systemprompt)
-        
-    # if answer_unit:
-    #     meta_save_status = save_meta_analysis(answer_unit, data.get("meta_ai_feedback", ""))
-    #     logger.info(f"メタ分析保存ステータス: {meta_save_status}")
-
-
         # レスポンス
     return Response({
     'ai_feedback': data.get('ai_feedback', None),
@@ -151,21 +140,22 @@ def show_analysis(request):
 
     context_data = get_context_data(session_id=session_id, user=user)
 
-    response_data = {
-        'answer_units': [
-            {
-                'question_text': unit.question_text,
-                'user_answer': unit.user_answer,
-                'ai_feedback': unit.ai_feedback,
-            }
-            for unit in context_data.get("answer_units", [])
-        ],
-        'meta_analyses': [
-            {
-                'meta_text': meta.meta_text,
-            }
-            for meta in context_data.get("meta_analyses", [])
-        ]
+    # メタ分析を辞書化（answer_unit.id -> meta_text）
+    meta_map = {
+        meta.answer.id: meta.meta_text
+        for meta in context_data.get("meta_analyses", [])
     }
 
-    return Response(response_data, status=200)
+    # 回答とメタ分析を1つずつ統合
+    results = [
+        {
+            "question_text": unit.question_text,
+            "user_answer": unit.user_answer,
+            "ai_feedback": unit.ai_feedback,
+            "meta_text": meta_map.get(unit.id, "")
+        }
+        for unit in context_data.get("answer_units", [])
+    ]
+
+    return Response({"results": results}, status=200)
+
