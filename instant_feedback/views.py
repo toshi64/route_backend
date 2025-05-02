@@ -1,16 +1,13 @@
 import logging
+import threading
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .components.get_context_data import get_context_data
 from .components.user_prompt_generation import generate_user_prompt
 from .components.system_prompt_definition import define_system_prompt
-from .components.generate_meta_userprompt import generate_meta_userprompt
-from .components.define_meta_systemprompt import define_meta_systemprompt
 from .components.call_chatgpt_api import call_chatgpt_api
-from .components.meta_call_chatgpt_api import meta_call_chatgpt_api
 from .components.save_to_database import save_answer_unit
-from .components.save_to_database import save_meta_analysis
 from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
 from .components.save_survey_response import save_survey_response
@@ -18,6 +15,8 @@ from .components.save_survey_response import save_survey_response
 
 from django.utils import timezone
 from .models import Session
+
+from .tasks import run_meta_analysis
 
 logger = logging.getLogger(__name__)
 
@@ -70,15 +69,20 @@ def submit_answer(request):
     # データベースに保存
     save_status, answer_unit = save_answer_unit(data, user)
 
-    data = generate_meta_userprompt(data)  # ← 同じdataに追記
-    meta_systemprompt = define_meta_systemprompt(past_context)
-
-
-    data = meta_call_chatgpt_api(data, meta_systemprompt)
-        
     if answer_unit:
-        meta_save_status = save_meta_analysis(answer_unit, data.get("meta_ai_feedback", ""))
-        logger.info(f"メタ分析保存ステータス: {meta_save_status}")
+        threading.Thread(target=run_meta_analysis, args=(answer_unit.id,)).start()
+    else:
+        logger.warning("answer_unit is None — メタ分析は実行されませんでした")
+
+    # data = generate_meta_userprompt(data)  # ← 同じdataに追記
+    # meta_systemprompt = define_meta_systemprompt(past_context)
+
+
+    # data = meta_call_chatgpt_api(data, meta_systemprompt)
+        
+    # if answer_unit:
+    #     meta_save_status = save_meta_analysis(answer_unit, data.get("meta_ai_feedback", ""))
+    #     logger.info(f"メタ分析保存ステータス: {meta_save_status}")
 
 
         # レスポンス
