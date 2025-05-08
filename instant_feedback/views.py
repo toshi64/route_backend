@@ -202,7 +202,7 @@ def make_question(request):
             "question_number": question_number,
             "question_text": question.question_text,
             "model_answer": question.model_answer,
-            "submit_endpoint": "/api/instant_feedback/submit/"
+            "submit_endpoint": "/api/instant_feedback/submit/",
         }
     }
 
