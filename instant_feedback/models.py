@@ -26,6 +26,12 @@ class StudentAnswerUnit(models.Model):
         on_delete=models.CASCADE,
         related_name='student_answer_units'
     )
+    question = models.ForeignKey(
+        'EijakushindanQuestion',
+        on_delete=models.CASCADE,
+        null=True,        # ← 一時的にnullを許容
+        blank=True        # ← 管理画面等での空欄許容
+    )
     question_text = models.TextField()
     user_answer = models.TextField()
     ai_feedback = models.TextField()
@@ -68,3 +74,13 @@ class SurveyResponse(models.Model):
 
     def __str__(self):
         return f"Survey by {self.user} for session {self.session.session_id}"
+    
+
+class EijakushindanQuestion(models.Model):
+    question_id = models.AutoField(primary_key=True)
+    question_text = models.TextField()
+    model_answer = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.question_id}: {self.question_text[:30]}"
