@@ -84,3 +84,24 @@ class EijakushindanQuestion(models.Model):
 
     def __str__(self):
         return f"{self.question_id}: {self.question_text[:30]}"
+    
+
+class FinalAnalysis(models.Model):
+    """
+    1セッション全体の最終的な分析（メタメタ分析）を保持するモデル
+    """
+    session = models.OneToOneField(
+        Session,
+        on_delete=models.CASCADE,
+        related_name='final_analysis'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='final_analyses'
+    )
+    analysis_text = models.TextField()  # GPTから返された分析本文
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"FinalAnalysis for Session {self.session.session_id}"

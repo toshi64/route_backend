@@ -1,6 +1,7 @@
 import logging
 import threading
 import random
+import time
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,16 +13,19 @@ from .components.save_to_database import save_answer_unit
 from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
 from .components.save_survey_response import save_survey_response
+from .components.define_meta_meta_systemprompt import define_meta_meta_systemprompt
 
 
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from .models import Session, EijakushindanQuestion, StudentAnswerUnit
+from .models import Session, EijakushindanQuestion, StudentAnswerUnit, FinalAnalysis
 
 from .tasks import run_meta_analysis
 
 logger = logging.getLogger(__name__)
 
+MAX_RETRIES = 5
+RETRY_INTERVAL_SEC = 10
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -62,6 +66,9 @@ def submit_answer(request):
     data = generate_user_prompt(data)
 
     past_context = get_context_data(session_id=data["session_id"], user=user)
+
+    print ("コンテキストデータ",past_context)
+
     # システムプロンプトを定義
     system_prompt = define_system_prompt(past_context)
     # ChatGPT APIを呼び出してフィードバックを生成
@@ -130,6 +137,7 @@ def session_end(request):
     return Response({'message': 'Session ended successfully.'}, status=200)
 
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def show_analysis(request):
@@ -139,28 +147,52 @@ def show_analysis(request):
     if not session_id:
         return Response({'error': 'session_id is required'}, status=400)
 
-    context_data = get_context_data(session_id=session_id, user=user)
+    context_data = None
+    status_label = "force_continue"
 
-    # メタ分析を辞書化（answer_unit.id -> meta_text）
-    meta_map = {
-        meta.answer.id: meta.meta_text
-        for meta in context_data.get("meta_analyses", [])
-    }
+    for attempt in range(1, MAX_RETRIES + 2):
+        context_data = get_context_data(session_id=session_id, user=user)
+        counts = context_data.get("field_counts", {})
+        total = counts.get("total", 0)
+        completed = counts.get("meta_analysis", 0)
 
-    # 回答とメタ分析を1つずつ統合
-    results = [
-        {
-            "question_text": unit.question_text,
-            "user_answer": unit.user_answer,
-            "ai_feedback": unit.ai_feedback,
-            "meta_text": meta_map.get(unit.id, "")
-        }
-        for unit in context_data.get("answer_units", [])
-    ]
+        if completed >= total:
+            print(f"[分析完了] メタ分析 {completed}/{total} 件（リトライ {attempt - 1} 回）")
+            status_label = "complete"
+            break
 
-    return Response({"results": results}, status=200)
+        if attempt <= MAX_RETRIES:
+            print(f"[分析未完了] メタ分析 {completed}/{total} 件（リトライ {attempt}/{MAX_RETRIES}）... 再試行待機中")
+            time.sleep(RETRY_INTERVAL_SEC)
+        else:
+            print(f"[諦めて続行] メタ分析 {completed}/{total} 件のまま分析処理に移行")
 
+    # ★ GPT呼び出しは共通処理として一度だけ実行
+    userprompt = context_data["formatted_prompt"]
+    systemprompt = define_meta_meta_systemprompt(context_data)
+    gpt_result = call_chatgpt_api({"user_prompt": userprompt}, systemprompt)
 
+    final_feedback = gpt_result["ai_feedback"]
+
+    # GPT呼び出し結果（すでにある）
+    final_feedback = gpt_result["ai_feedback"]
+
+    # FinalAnalysisとして保存（すでに存在していれば更新）
+    session = Session.objects.get(session_id=session_id, user=user)
+
+    FinalAnalysis.objects.update_or_create(
+        session=session,
+        user=user,
+        defaults={"analysis_text": final_feedback}
+    )
+
+    print("✅ FinalAnalysis保存完了")
+
+    return Response({
+        "status": status_label,
+        "gpt_result": gpt_result,
+        "field_counts": context_data["field_counts"]
+    }, status=200)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

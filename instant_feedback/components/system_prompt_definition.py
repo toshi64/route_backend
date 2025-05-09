@@ -35,18 +35,18 @@ def define_system_prompt(past_context=None) -> str:
     )
     
 
-    if not past_context or (not past_context["answer_units"] and not past_context["meta_analyses"]):
-        context_block = "\n【参考情報】\nこの問題は当セッションの最初の問題です。まだ過去の回答データや分析情報は存在しません。\n"
+    if not past_context or not past_context.get("formatted_prompt"):
+        context_block = (
+            "\n【参考情報】\n"
+            "この問題は当セッションの最初の問題です。\n"
+            "まだ過去の回答データや分析情報は存在しません。\n"
+        )
     else:
-        context_block = "\n【参考情報：過去の学習履歴】※下記はこの分析についてのセッションの内部で生徒が実際に解いた問題、回答、それに対するChatGPTの添削、またそれに対するChatGPTのさらなるメタ分析のデータです。これらを生徒の現状の能力の把握に役立ててください。\n"
-        for unit in past_context["answer_units"]:
-            context_block += f"Q: {unit.question_text}\nA: {unit.user_answer}\nFeedback: {unit.ai_feedback}\n------\n"
-        for meta in past_context["meta_analyses"]:
-            context_block += f"Meta Analysis:\n{meta.meta_text}\n------\n"
-
-        context_block += (
-            "\n※ この情報は過去の学習履歴です。回答文中で直接言及する必要はありませんが、"
-            "繰り返し現れる誤りや学習傾向が見られる場合には、対応の方向性を調整してください。"
+        context_block = (
+            "\n【参考情報：過去の学習履歴】\n"
+            "以下はこのセッションで生徒が実際に取り組んだ問題・回答・AIフィードバック・メタ分析の履歴です。\n"
+            "これらは回答文中で直接引用する必要はありませんが、生徒の文法傾向や弱点把握の参考にしてください。\n\n"
+            f"{past_context['formatted_prompt']}"
         )
 
     return base_prompt + context_block
