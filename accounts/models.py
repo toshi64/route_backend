@@ -20,5 +20,12 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    # regionを追加
+    region = models.CharField(max_length=50, blank=True)
+
+    # first_name, last_name は AbstractUser にすでにあるが blank=False なので…
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
+
     def __str__(self):
         return self.email

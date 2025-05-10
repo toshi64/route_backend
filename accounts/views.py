@@ -103,3 +103,28 @@ def me_view(request):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def profile_update(request):
+    print("一応とどいとるぞ")
+    user = request.user
+    data = request.data
+    print("一応とどいとるぞ2")
+
+    user.first_name = data.get('first_name', '')
+    user.last_name = data.get('last_name', '')
+    user.nickname = data.get('nickname', '')
+    user.grade = data.get('grade', '')
+    user.region = data.get('region', '')
+    user.email = data.get('email', user.email)  # 一応email更新も許可
+    if data.get('password'):
+        user.set_password(data['password'])
+    print("一応とどいとるぞ3")
+    user.save()
+
+    login(request, user)
+    
+    return Response({'message': 'プロフィールが更新されました'})
+
