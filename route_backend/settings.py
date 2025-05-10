@@ -30,6 +30,10 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+LINE_CHANNEL_ID = os.getenv('LINE_CHANNEL_ID')
+LINE_CHANNEL_SECRET = os.getenv('LINE_CHANNEL_SECRET')
+LINE_REDIRECT_URI = os.getenv('LINE_REDIRECT_URI')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
@@ -50,6 +54,7 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework',
     'instant_feedback',
+    'line_integration',
 ]
 
 MIDDLEWARE = [

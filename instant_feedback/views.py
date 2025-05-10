@@ -140,7 +140,7 @@ def session_end(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def show_analysis(request):
+def start_analysis(request):
     user = request.user
     session_id = request.query_params.get('session_id')
 
@@ -185,14 +185,35 @@ def show_analysis(request):
         user=user,
         defaults={"analysis_text": final_feedback}
     )
+   
+    return Response({'status': 'analysis_started'})
 
-    print("✅ FinalAnalysis保存完了")
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def show_analysis(request):
+    user = request.user
+    session_id = request.query_params.get('session_id')
+
+    if not session_id:
+        return Response({'error': 'session_id is required'}, status=400)
+
+    try:
+        session = Session.objects.get(session_id=session_id, user=user)
+        final_analysis = FinalAnalysis.objects.get(session=session, user=user)
+        print("ShowAnalysisもちゃんと動いてますよ",final_analysis.analysis_text)
+    except Session.DoesNotExist:
+        return Response({'error': 'Session not found'}, status=404)
+    except FinalAnalysis.DoesNotExist:
+        return Response({'error': 'Final analysis not found'}, status=404)
+    
     return Response({
-        "status": status_label,
-        "gpt_result": gpt_result,
-        "field_counts": context_data["field_counts"]
-    }, status=200)
+        'session_id': session.session_id,
+        'analysis_text': final_analysis.analysis_text,
+        'created_at': final_analysis.created_at.isoformat()
+    })
+
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

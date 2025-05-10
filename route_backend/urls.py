@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/', include('material_generator.urls')),
     path('api/accounts/', include('accounts.urls')),  
     path('api/instant_feedback/', include('instant_feedback.urls')),
+    path('api/line/', include('line_integration.urls')),
 ]
