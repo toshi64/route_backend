@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model, login
 from .services import get_line_tokens, get_line_profile
+from django.shortcuts import redirect
 
 User = get_user_model()
 
@@ -39,11 +40,7 @@ def line_login_callback(request):
         # ④ Djangoセッションにログイン
         login(request, user)
 
-        return Response({
-            "message": "LINEログイン成功",
-            "new_user": created,
-            "line_display_name": display_name
-        })
+        return redirect("https://app.route-web.com/")
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
