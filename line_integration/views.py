@@ -40,7 +40,10 @@ def line_login_callback(request):
         # ④ Djangoセッションにログイン
         login(request, user)
 
-        return redirect("https://app.route-web.com/profile/")
+        if user.email.startswith("line_"):  # 仮ユーザー判定（ダミーメールなら本登録未完了）
+            return redirect("https://app.route-web.com/register_email/")
+        else:
+            return redirect("https://app.route-web.com/profile/")
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
