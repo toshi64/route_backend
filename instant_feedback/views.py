@@ -18,7 +18,7 @@ from .components.define_meta_meta_systemprompt import define_meta_meta_systempro
 
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
-from .models import Session, EijakushindanQuestion, StudentAnswerUnit, FinalAnalysis
+from .models import Session, EijakushindanQuestion, StudentAnswerUnit, FinalAnalysis, SurveyResponse
 
 from .tasks import run_meta_analysis
 
@@ -261,3 +261,20 @@ def make_question(request):
 
     # [Response(...) を返す]
     return Response(response_data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def progress_check_view(request):
+    user = request.user
+
+    survey_completed = SurveyResponse.objects.filter(user=user).exists()
+    writing_completed = FinalAnalysis.objects.filter(user=user).exists()
+
+    return Response({
+        "message": "OKです！",
+        "user_id": user.id,
+        "email": user.email,
+        "survey_completed": survey_completed,
+        "writing_completed": writing_completed,  
+        "analysis_completed": False, 
+    })
