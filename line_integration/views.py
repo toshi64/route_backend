@@ -41,7 +41,7 @@ def line_login_callback(request):
         login(request, user)
 
         if user.email.startswith("line_"):  # 仮ユーザー判定（ダミーメールなら本登録未完了）
-            return redirect("https://app.route-web.com/profile/")
+            return redirect("https://app.route-web.com/profile_setup/")
         else:
             return redirect("https://app.route-web.com")
 
