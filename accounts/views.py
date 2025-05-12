@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CustomUserSerializer
 from django.views.decorators.csrf import ensure_csrf_cookie
-
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 
@@ -79,12 +79,12 @@ def login_view(request):
         return JsonResponse({'error': str(e)}, status=400)
     
 
-@csrf_exempt
+
+@require_POST
+@csrf_protect
 def logout_view(request):
-    if request.method == 'POST':
-        logout(request)
-        return JsonResponse({'message': 'Logged out'}, status=200)
-    return JsonResponse({'error': 'POST only'}, status=405)
+    logout(request)
+    return JsonResponse({'message': 'Logged out'}, status=200)
 
 
 @ensure_csrf_cookie
@@ -108,11 +108,8 @@ def me_view(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def profile_update(request):
-    print("一応とどいとるぞ")
     user = request.user
     data = request.data
-    print("一応とどいとるぞ2")
-
     user.first_name = data.get('first_name', '')
     user.last_name = data.get('last_name', '')
     user.nickname = data.get('nickname', '')
@@ -121,7 +118,6 @@ def profile_update(request):
     user.email = data.get('email', user.email)  # 一応email更新も許可
     if data.get('password'):
         user.set_password(data['password'])
-    print("一応とどいとるぞ3")
     user.save()
 
     login(request, user)
