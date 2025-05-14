@@ -40,7 +40,7 @@ def line_login_callback(request):
         # ④ Djangoセッションにログイン
         login(request, user)
 
-        return redirect("https://app.route-web.com/first_diagnosis/ai-writing")
+        return redirect("https://app.route-web.com/first_diagnosis/ai_writing")
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
