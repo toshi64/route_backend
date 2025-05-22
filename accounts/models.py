@@ -14,8 +14,8 @@ class CustomUser(AbstractUser):
 
     # LINEログイン用
     line_user_id = models.CharField(max_length=64, null=True, blank=True, unique=True)
-    line_display_name = models.CharField(max_length=100, null=True, blank=True)
-    line_picture_url = models.URLField(null=True, blank=True)
+    line_display_name = models.CharField(max_length=255, null=True, blank=True)
+    line_picture_url = models.URLField(max_length=1000, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']

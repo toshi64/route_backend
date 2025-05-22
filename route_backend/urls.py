@@ -23,4 +23,5 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),  
     path('api/instant_feedback/', include('instant_feedback.urls')),
     path('api/line/', include('line_integration.urls')),
+    path('api/teacher_dashboard/', include('teacher_dashboard.urls')),
 ]

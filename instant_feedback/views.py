@@ -238,7 +238,12 @@ def make_question(request):
     session = get_object_or_404(Session, session_id=session_id)
 
     # [get_all_ids()] + [get_used_ids()]
-    all_ids = list(EijakushindanQuestion.objects.values_list('question_id', flat=True))
+    all_ids = list(
+        EijakushindanQuestion.objects
+        .filter(question_id__lte=20)
+        .values_list('question_id', flat=True)
+    )
+
     used_ids = set(
         StudentAnswerUnit.objects
         .filter(session=session)
