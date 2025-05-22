@@ -14,6 +14,7 @@ from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
 from .components.save_survey_response import save_survey_response
 from .components.define_meta_meta_systemprompt import define_meta_meta_systemprompt
+from line_integration.services import send_line_text_to_user
 
 
 from django.utils import timezone
@@ -190,11 +191,15 @@ def start_analysis(request):
     # FinalAnalysisとして保存（すでに存在していれば更新）
     session = Session.objects.get(session_id=session_id, user=user)
 
-    FinalAnalysis.objects.update_or_create(
+    final_analysis, _ = FinalAnalysis.objects.update_or_create(
         session=session,
         user=user,
         defaults={"analysis_text": final_feedback}
     )
+
+    message_text = f"診断が完了しました！\n\n--- 分析結果 ---\n{final_analysis.analysis_text.strip()}"
+
+    send_line_text_to_user(user.id, message_text)
    
     return Response({'status': 'analysis_started'})
 
