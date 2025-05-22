@@ -158,6 +158,11 @@ def start_analysis(request):
     user.first_ai_writing_done = True
     user.save()
 
+    send_line_text_to_user(
+        user.id,
+        "英作文、お疲れ様でした！\nまもなくこちらのチャットに分析の結果をお送りします。\n少々お待ちください。"
+    )
+
     context_data = None
     status_label = "force_continue"
 
