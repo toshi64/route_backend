@@ -14,9 +14,9 @@ from .components.generate_session_id import generate_session_id
 from .components.save_session_entry import save_session_entry
 from .components.save_survey_response import save_survey_response
 from .components.define_meta_meta_systemprompt import define_meta_meta_systemprompt
-from line_integration.services import send_line_text_to_user
+from .final_analysis.orchestrator import run_analysis
 
-
+from threading import Thread
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from .models import Session, EijakushindanQuestion, StudentAnswerUnit, FinalAnalysis, SurveyResponse
@@ -146,6 +146,68 @@ def session_end(request):
 
 
 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def start_analysis(request):
+#     user = request.user
+#     session_id = request.query_params.get('session_id')
+
+#     if not session_id:
+#         return Response({'error': 'session_id is required'}, status=400)
+    
+#     user.first_ai_writing_done = True
+#     user.save()
+
+#     send_line_text_to_user(
+#         user.id,
+#         "英作文、お疲れ様でした！\nまもなくこちらのチャットに分析の結果をお送りします。\n少々お待ちください。"
+#     )
+
+#     context_data = None
+#     status_label = "force_continue"
+
+#     for attempt in range(1, MAX_RETRIES + 2):
+#         context_data = get_context_data(session_id=session_id, user=user)
+#         counts = context_data.get("field_counts", {})
+#         total = counts.get("total", 0)
+#         completed = counts.get("meta_analysis", 0)
+
+#         if completed >= total:
+#             print(f"[分析完了] メタ分析 {completed}/{total} 件（リトライ {attempt - 1} 回）")
+#             status_label = "complete"
+#             break
+
+#         if attempt <= MAX_RETRIES:
+#             print(f"[分析未完了] メタ分析 {completed}/{total} 件（リトライ {attempt}/{MAX_RETRIES}）... 再試行待機中")
+#             time.sleep(RETRY_INTERVAL_SEC)
+#         else:
+#             print(f"[諦めて続行] メタ分析 {completed}/{total} 件のまま分析処理に移行")
+
+#     # ★ GPT呼び出しは共通処理として一度だけ実行
+#     userprompt = context_data["formatted_prompt"]
+#     systemprompt = define_meta_meta_systemprompt(context_data)
+#     gpt_result = call_chatgpt_api({"user_prompt": userprompt}, systemprompt)
+
+#     final_feedback = gpt_result["ai_feedback"]
+
+#     # GPT呼び出し結果（すでにある）
+#     final_feedback = gpt_result["ai_feedback"]
+
+#     # FinalAnalysisとして保存（すでに存在していれば更新）
+#     session = Session.objects.get(session_id=session_id, user=user)
+
+#     final_analysis, _ = FinalAnalysis.objects.update_or_create(
+#         session=session,
+#         user=user,
+#         defaults={"analysis_text": final_feedback}
+#     )
+
+#     message_text = f"診断が完了しました！\n\n--- 分析結果 ---\n{final_analysis.analysis_text.strip()}"
+
+#     send_line_text_to_user(user.id, message_text)
+   
+#     return Response({'status': 'analysis_started'})
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def start_analysis(request):
@@ -158,55 +220,9 @@ def start_analysis(request):
     user.first_ai_writing_done = True
     user.save()
 
-    send_line_text_to_user(
-        user.id,
-        "英作文、お疲れ様でした！\nまもなくこちらのチャットに分析の結果をお送りします。\n少々お待ちください。"
-    )
+    Thread(target=run_analysis, args=(session_id, user.id)).start()    
 
-    context_data = None
-    status_label = "force_continue"
-
-    for attempt in range(1, MAX_RETRIES + 2):
-        context_data = get_context_data(session_id=session_id, user=user)
-        counts = context_data.get("field_counts", {})
-        total = counts.get("total", 0)
-        completed = counts.get("meta_analysis", 0)
-
-        if completed >= total:
-            print(f"[分析完了] メタ分析 {completed}/{total} 件（リトライ {attempt - 1} 回）")
-            status_label = "complete"
-            break
-
-        if attempt <= MAX_RETRIES:
-            print(f"[分析未完了] メタ分析 {completed}/{total} 件（リトライ {attempt}/{MAX_RETRIES}）... 再試行待機中")
-            time.sleep(RETRY_INTERVAL_SEC)
-        else:
-            print(f"[諦めて続行] メタ分析 {completed}/{total} 件のまま分析処理に移行")
-
-    # ★ GPT呼び出しは共通処理として一度だけ実行
-    userprompt = context_data["formatted_prompt"]
-    systemprompt = define_meta_meta_systemprompt(context_data)
-    gpt_result = call_chatgpt_api({"user_prompt": userprompt}, systemprompt)
-
-    final_feedback = gpt_result["ai_feedback"]
-
-    # GPT呼び出し結果（すでにある）
-    final_feedback = gpt_result["ai_feedback"]
-
-    # FinalAnalysisとして保存（すでに存在していれば更新）
-    session = Session.objects.get(session_id=session_id, user=user)
-
-    final_analysis, _ = FinalAnalysis.objects.update_or_create(
-        session=session,
-        user=user,
-        defaults={"analysis_text": final_feedback}
-    )
-
-    message_text = f"診断が完了しました！\n\n--- 分析結果 ---\n{final_analysis.analysis_text.strip()}"
-
-    send_line_text_to_user(user.id, message_text)
-   
-    return Response({'status': 'analysis_started'})
+    return Response({'status': 'ok'})
 
 
 @api_view(['GET'])
