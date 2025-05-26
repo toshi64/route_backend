@@ -20,6 +20,7 @@ def run_analysis(session_id, user_id):
     4. 完了した分析データを元に、GPTで最終フィードバックを生成
     5. FinalAnalysis テーブルに分析結果を保存（既存データがあれば更新）
     6. LINEで「診断完了通知＋結果メッセージ」を送信
+    7. 練習用カリキュラム生成の非同期関数を呼び出して、このスコープは終了。
 
     ※ 本関数は通常、APIエンドポイントから `threading.Thread` によって非同期実行される。
     ※ HTTPレスポンスは返さず、完全にバックグラウンドで処理される想定。
@@ -53,3 +54,6 @@ def run_analysis(session_id, user_id):
     message_text = f"診断が完了しました！\n\n--- 分析結果 ---\n{final_analysis.analysis_text.strip()}"
 
     send_line_text_to_user(user.id, message_text)
+
+    from daily_material.utils.trigger import trigger_curriculum_generation
+    trigger_curriculum_generation(session.id)

@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'instant_feedback',
     'line_integration',
     'teacher_dashboard',
+    'daily_material',
 ]
 
 MIDDLEWARE = [
