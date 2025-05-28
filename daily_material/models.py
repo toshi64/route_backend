@@ -42,6 +42,10 @@ class CurriculumDay(models.Model):
 
     def __str__(self):
         return f"Day {self.day}: {self.title}"
+    
+    @property
+    def user(self):
+        return self.curriculum_plan.final_analysis.user
 
 
 class StaticMaterialComponent(models.Model):
