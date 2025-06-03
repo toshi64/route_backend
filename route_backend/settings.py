@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'line_integration',
     'teacher_dashboard',
     'daily_material',
+    'ai_writing',
+    'material_scheduler',
 ]
 
 MIDDLEWARE = [

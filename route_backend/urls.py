@@ -25,4 +25,6 @@ urlpatterns = [
     path('api/daily_material/', include('daily_material.urls')),
     path('api/line/', include('line_integration.urls')),
     path('api/teacher_dashboard/', include('teacher_dashboard.urls')),
+    path('api/ai_writing/', include('ai_writing.urls')),
+    path('api/material_scheduler/', include('material_scheduler.urls')),
 ]
