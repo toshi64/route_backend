@@ -1,5 +1,5 @@
-def define_system_prompt(past_context=None) -> str:
-    base_prompt = (
+def define_system_prompt() -> str:
+    return (
         "あなたは、英語が苦手な高校生に対して、英作文の診断を行うAI講師です。\n"
         "生徒は偏差値30〜50程度で、英語に強い苦手意識を持っています。\n"
         "あなたの役割は、生徒が書いた一文の中から『その構文が使えているか』『文法理解がどの程度か』を観察し、\n"
@@ -33,20 +33,3 @@ def define_system_prompt(past_context=None) -> str:
         "- 単語の選択ミスが『知らなかった』ことに起因すると推察される場合も、スペルミスと同様に扱いましょう。\n"
         "- その単語や語法をこれから覚えていけばよい、という前向きなスタンスで補足してください。"
     )
-    
-
-    if not past_context or not past_context.get("formatted_prompt"):
-        context_block = (
-            "\n【参考情報】\n"
-            "この問題は当セッションの最初の問題です。\n"
-            "まだ過去の回答データや分析情報は存在しません。\n"
-        )
-    else:
-        context_block = (
-            "\n【参考情報：過去の学習履歴】\n"
-            "以下はこのセッションで生徒が実際に取り組んだ問題・回答・AIフィードバック・メタ分析の履歴です。\n"
-            "これらは回答文中で直接引用する必要はありませんが、生徒の文法傾向や弱点把握の参考にしてください。\n\n"
-            f"{past_context['formatted_prompt']}"
-        )
-
-    return base_prompt + context_block

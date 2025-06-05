@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'daily_material',
     'ai_writing',
     'material_scheduler',
+    'grammarQuestions_import_from_csv',
 ]
 
 MIDDLEWARE = [
