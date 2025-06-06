@@ -6,4 +6,5 @@ urlpatterns = [
     path('make_question/', views.make_question, name='make_question'),
     path('get_questions_from_component_id/', views.get_questions_from_component_id, name='get_questions_from_component_id'),
     path('submit_answer/', views.submit_answer, name='submit_answer'),
+    path('show_progress/', views.show_progress, name='show_progress'),
 ]

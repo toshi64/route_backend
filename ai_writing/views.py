@@ -10,7 +10,8 @@ from .components.user_prompt_generation import generate_user_prompt
 from .components.system_prompt_definition import define_system_prompt
 from .components.call_chatgpt_api import call_chatgpt_api
 from .models import GrammarQuestion, AnswerUnit, AIFeedback
-
+from django.utils.timezone import localtime
+from datetime import timedelta
 
 from django.shortcuts import get_object_or_404
 
@@ -126,6 +127,7 @@ def get_questions_from_component_id(request):
         try:
             component = ScheduleComponent.objects.get(component_id=component_id)
             detail = component.detail  # 例: {"文型": ["SV"], "不定詞": ["to + 動詞"]}
+            schedule = component.schedule
 
             questions = []
             for genre, subgenres in detail.items():
@@ -139,15 +141,36 @@ def get_questions_from_component_id(request):
             questions = list({q.id: q for q in questions}.values())  # 重複排除
             selected = random.sample(questions, min(5, len(questions)))
 
-            response = [{
+            question_data = [{
                 "id": q.id,
                 "genre": q.genre,
                 "subgenre": q.subgenre,
+                "difficulty": q.difficulty,
                 "question_text": q.question_text,
                 "answer": q.answer,
             } for q in selected]
 
-            return JsonResponse(response, safe=False)
+            curriculum_data = {
+                "detail": component.detail  # JSONで渡す {"文型": [...], "不定詞": [...]}
+            }
+
+            greeting_structure = {
+                "user_name": request.user.line_display_name or request.user.username,
+                "topics": component.detail  # そのまま渡す
+            }
+
+            schedule_data = {
+                "start_date": schedule.start_date.isoformat(),
+                "mode": schedule.mode,
+                "mode_display": schedule.get_mode_display(),  # "1週間毎日"など
+            }
+
+            return JsonResponse({
+                "questions": question_data,
+                "curriculum": curriculum_data,
+                "greeting_structure": greeting_structure,
+                "schedule": schedule_data 
+            })
 
         except ScheduleComponent.DoesNotExist:
             return JsonResponse({"error": "Component not found"}, status=404)
@@ -155,6 +178,56 @@ def get_questions_from_component_id(request):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def show_progress(request):
+    component_id = request.data.get('component_id')
+
+    try:
+        component = ScheduleComponent.objects.get(component_id=component_id)
+        schedule = component.schedule
+        user = request.user
+
+        # ✅ 開始日～終了日のリストを作成（daily_for_one_week対応）
+        if schedule.mode == 'daily_for_one_week':
+            date_list = [schedule.start_date + timedelta(days=i) for i in range(7)]
+        elif schedule.mode == 'once':
+            date_list = [schedule.start_date]
+        else:
+            return Response({"error": "未対応のスケジュールモードです"}, status=400)
+
+        # ✅ 対象期間のAnswerUnitを取得
+        answers = AnswerUnit.objects.filter(
+            user=user,
+            component=component,
+            created_at__date__range=(date_list[0], date_list[-1])
+        )
+
+        # ✅ 日別に集計
+        progress_by_date = []
+        for date in date_list:
+            date_answers = answers.filter(created_at__date=date)
+            progress_by_date.append({
+                "date": date.isoformat(),
+                "status": "done" if date_answers.exists() else (
+                    "upcoming" if date > localtime().date() else "missed"
+                ),
+                "answered_count": date_answers.count(),
+                "session_count": date_answers.values("session").distinct().count()
+            })
+
+        print(progress_by_date)
+
+        return Response({
+            "component_id": str(component_id),
+            "schedule_mode": schedule.mode,
+            "start_date": schedule.start_date.isoformat(),
+            "progress": progress_by_date
+        })
+
+    except ScheduleComponent.DoesNotExist:
+        return Response({"error": "Component not found"}, status=404)
 
 
 @api_view(['POST'])
@@ -170,6 +243,14 @@ def submit_answer(request):
     question_id = data.get('question_id')
     user_answer = data.get('user_answer')
 
+    component_id = data.get('component_id')  
+    component = None
+    if component_id:
+        try:
+            component = ScheduleComponent.objects.get(component_id=component_id)
+        except ScheduleComponent.DoesNotExist:
+            print(f"[警告] component_id={component_id} が見つかりませんでした。")
+
     # データ取得・保存処理
     try:
         session = Session.objects.get(session_id=session_id)
@@ -179,7 +260,8 @@ def submit_answer(request):
             session=session,
             question=question,
             user=user,
-            user_answer=user_answer
+            user_answer=user_answer,
+            component=component
         )
         
         data = generate_user_prompt(data)
