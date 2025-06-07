@@ -9,7 +9,7 @@ from .components.save_session_entry import save_session_entry
 from .components.user_prompt_generation import generate_user_prompt
 from .components.system_prompt_definition import define_system_prompt
 from .components.call_chatgpt_api import call_chatgpt_api
-from .models import GrammarQuestion, AnswerUnit, AIFeedback
+from .models import GrammarQuestion, GrammarNote, AnswerUnit, AIFeedback
 from django.utils.timezone import localtime
 from datetime import timedelta
 
@@ -204,15 +204,25 @@ def show_progress(request):
             created_at__date__range=(date_list[0], date_list[-1])
         )
 
-        # ✅ 日別に集計
+        
+        today = localtime().date()
+
         progress_by_date = []
         for date in date_list:
             date_answers = answers.filter(created_at__date=date)
+
+            if date_answers.exists():
+                status = "done"
+            elif date > today:
+                status = "upcoming"
+            elif date == today:
+                status = "upcoming"  # ✅ 当日はまだやっていなくても upcoming にする
+            else:
+                status = "missed"
+
             progress_by_date.append({
                 "date": date.isoformat(),
-                "status": "done" if date_answers.exists() else (
-                    "upcoming" if date > localtime().date() else "missed"
-                ),
+                "status": status,
                 "answered_count": date_answers.count(),
                 "session_count": date_answers.values("session").distinct().count()
             })
@@ -287,3 +297,20 @@ def submit_answer(request):
         return Response({'error': '無効な問題IDです'}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_grammar_note(request):
+    subgenre_name = request.query_params.get("subgenre")
+    if not subgenre_name:
+        return JsonResponse({"error": "subgenre parameter is required"}, status=400)
+
+    try:
+        note = GrammarNote.objects.get(subgenre=subgenre_name)
+        return JsonResponse({
+            "title": note.title,
+            "description": note.description
+        })
+    except GrammarNote.DoesNotExist:
+        return JsonResponse({"error": "GrammarNote not found for the given subgenre"}, status=404)

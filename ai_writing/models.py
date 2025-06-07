@@ -21,6 +21,23 @@ class GrammarQuestion(models.Model):
     source = models.CharField(max_length=100)
     is_active = models.BooleanField()
 
+class GrammarNote(models.Model):
+    custom_id = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    version = models.CharField(max_length=10, default='1.0')
+    created_by = models.CharField(max_length=100)
+
+    subgenre = models.CharField(max_length=100)  # 例: "SV", "SVO" など
+    title = models.CharField(max_length=255)
+    description = models.TextField(help_text="Markdownで記述された解説本文")
+
+    class Meta:
+        ordering = ['created_at']  # 古い順。新しい順なら ['-created_at']
+
+    def __str__(self):
+        return f"{self.subgenre}: {self.title}"
+
 
 class AnswerUnit(models.Model):
     session = models.ForeignKey(Session, on_delete=models.CASCADE)
