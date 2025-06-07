@@ -8,4 +8,5 @@ urlpatterns = [
     path('submit_answer/', views.submit_answer, name='submit_answer'),
     path('show_progress/', views.show_progress, name='show_progress'),
     path('get_grammar_note/', views.get_grammar_note, name='get_grammar_note'),
+    path('run_meta_analysis/', views.run_meta_analysis, name='run_meta_analysis'),
 ]

@@ -314,3 +314,28 @@ def get_grammar_note(request):
         })
     except GrammarNote.DoesNotExist:
         return JsonResponse({"error": "GrammarNote not found for the given subgenre"}, status=404)
+    
+
+@api_view(['POST'])
+def run_meta_analysis(request):
+    session_id = request.data.get('session_id')
+    try:
+        session = Session.objects.get(session_id=session_id)
+        answers = AnswerUnit.objects.filter(session=session)
+        if not answers.exists():
+            return Response({"error": "No answers found"}, status=400)
+
+        user = session.user
+        component = answers.first().component
+
+        print(component)
+
+        return Response({
+            "message": "メタアナリシスを実行しました（仮）",
+            "session_id": session_id,
+            "user_id": user.id,
+            "component_id": component.id if component else None
+        })
+
+    except Session.DoesNotExist:
+        return Response({"error": "Invalid session_id"}, status=404)
