@@ -9,4 +9,6 @@ urlpatterns = [
     path('show_progress/', views.show_progress, name='show_progress'),
     path('get_grammar_note/', views.get_grammar_note, name='get_grammar_note'),
     path('run_meta_analysis/', views.run_meta_analysis, name='run_meta_analysis'),
+    path('show_meta_analysis/', views.show_meta_analysis, name='show_meta_analysis'),
+    path('show_session_history/', views.show_session_history, name='show_session_history'),
 ]

@@ -1,5 +1,7 @@
 import logging
 import random
+from threading import Thread
+from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -8,10 +10,13 @@ from .components.save_session_entry import save_session_entry
 from .components.save_session_entry import save_session_entry
 from .components.user_prompt_generation import generate_user_prompt
 from .components.system_prompt_definition import define_system_prompt
-from .components.call_chatgpt_api import call_chatgpt_api
-from .models import GrammarQuestion, GrammarNote, AnswerUnit, AIFeedback
+from .models import GrammarQuestion, GrammarNote, AnswerUnit, AIFeedback, MetaAnalysisResult
 from django.utils.timezone import localtime
 from datetime import timedelta
+from .components.prompts import define_meta_analysis_system_prompt
+from .components.call_chatgpt_api_v2 import call_chatgpt_api
+from .components.validator import validate_meta_analysis
+from ai_writing.tasks import run_meta_analysis_task
 
 from django.shortcuts import get_object_or_404
 
@@ -240,6 +245,42 @@ def show_progress(request):
         return Response({"error": "Component not found"}, status=404)
 
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def show_session_history(request):
+    user = request.user
+    component_id = request.data.get("component_id")
+
+    if not component_id:
+        return Response({"error": "component_id is required"}, status=400)
+
+    try:
+        component = ScheduleComponent.objects.get(component_id=component_id)
+    except ScheduleComponent.DoesNotExist:
+        return Response({"error": "Invalid component_id"}, status=404)
+
+    # 該当ユーザー & 指定コンポーネントの MetaAnalysis を取得（降順）
+    results = MetaAnalysisResult.objects.filter(
+        component=component,
+        session__user=user
+    ).order_by('-created_at')
+
+    response_data = [
+        {
+            "session_id": result.session.session_id,
+            "score": result.score,
+            "advice": result.advice,
+            "created_at": result.created_at.isoformat()
+        }
+        for result in results
+    ]
+
+    print(f"✅ ユーザー{user.id}のMetaAnalysis履歴（component={component_id}, 件数={len(response_data)}）")
+    return Response({"session_history": response_data})
+
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def submit_answer(request):
@@ -274,20 +315,18 @@ def submit_answer(request):
             component=component
         )
         
-        data = generate_user_prompt(data)
+        user_prompt = generate_user_prompt(data)
         system_prompt = define_system_prompt()
 
-        data = call_chatgpt_api(data, system_prompt)
+        feedback_text = call_chatgpt_api(user_prompt, system_prompt)
 
         AIFeedback.objects.create(
             answer=answer_unit,
-            feedback_text=data.get('ai_feedback', '未出力')
+            feedback_text=feedback_text or '未出力'
         )
-        print(data)
-
 
         return Response({
-            'ai_feedback': data.get('ai_feedback', None),
+            'ai_feedback': feedback_text,
             'message': 'Successfully processed and saved your answer!',
         })
 
@@ -297,6 +336,8 @@ def submit_answer(request):
         return Response({'error': '無効な問題IDです'}, status=400)
     except Exception as e:
         return Response({'error': str(e)}, status=500)
+
+
 
 
 @api_view(['GET'])
@@ -318,24 +359,42 @@ def get_grammar_note(request):
 
 @api_view(['POST'])
 def run_meta_analysis(request):
-    session_id = request.data.get('session_id')
+    session_id = request.data.get("session_id")
+    component_id = request.data.get("component_id")
+
+    # ✅ 遅延インポートで循環参照を回避
+    from .tasks import run_meta_analysis_task
+
+    thread = Thread(target=run_meta_analysis_task, args=(session_id, component_id))
+    thread.start()
+
+    return Response({"message": "メタアナリシス処理をバックグラウンドで開始しました"})
+
+
+
+@csrf_exempt
+def show_meta_analysis(request):
+    if request.method != 'GET':
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    session_id = request.GET.get("session_id")
+    component_id = request.GET.get("component_id")
+
+    if not session_id or not component_id:
+        return JsonResponse({"error": "Missing session_id or component_id"}, status=400)
+
     try:
         session = Session.objects.get(session_id=session_id)
-        answers = AnswerUnit.objects.filter(session=session)
-        if not answers.exists():
-            return Response({"error": "No answers found"}, status=400)
+        component = ScheduleComponent.objects.get(component_id=component_id)
+    except (Session.DoesNotExist, ScheduleComponent.DoesNotExist):
+        return JsonResponse({"error": "Invalid session or component"}, status=404)
 
-        user = session.user
-        component = answers.first().component
-
-        print(component)
-
-        return Response({
-            "message": "メタアナリシスを実行しました（仮）",
-            "session_id": session_id,
-            "user_id": user.id,
-            "component_id": component.id if component else None
+    try:
+        result = MetaAnalysisResult.objects.get(session=session, component=component)
+        return JsonResponse({
+            "status": "complete",
+            "score": result.score,
+            "advice": result.advice
         })
-
-    except Session.DoesNotExist:
-        return Response({"error": "Invalid session_id"}, status=404)
+    except MetaAnalysisResult.DoesNotExist:
+        return HttpResponse(status=204)

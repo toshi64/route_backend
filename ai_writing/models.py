@@ -51,3 +51,15 @@ class AIFeedback(models.Model):
     answer = models.OneToOneField(AnswerUnit, on_delete=models.CASCADE, related_name='ai_feedback')
     feedback_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+class MetaAnalysisResult(models.Model):
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    component = models.ForeignKey(ScheduleComponent, on_delete=models.CASCADE)
+    
+    score = models.IntegerField()
+    advice = models.CharField(max_length=100)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("session", "component")  # 1セッション×1コンポーネントに対し1つだけ記録
