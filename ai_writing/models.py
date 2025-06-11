@@ -83,7 +83,6 @@ class QuestionClipForGrammar(models.Model):
     schedule_component = models.ForeignKey(ScheduleComponent, on_delete=models.SET_NULL, null=True, blank=True)
 
     # 疑問clipのタイトルと内容
-    title = models.CharField(max_length=255)
     content = models.TextField()
 
     # 投稿日時
@@ -93,4 +92,4 @@ class QuestionClipForGrammar(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Clip from {self.user} - {self.title[:20]} ({self.created_at})"
+        return f"Clip from {self.user} - {self.content[:20]} ({self.created_at})"

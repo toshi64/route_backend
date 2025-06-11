@@ -11,7 +11,7 @@ class QuestionClipForGrammarSerializer(serializers.ModelSerializer):
         model = QuestionClipForGrammar
         fields = [
             'id', 'user', 'answer_unit_id', 'grammar_question_id',
-            'title', 'content', 'created_at'
+            'content', 'created_at'
         ]
         read_only_fields = ['id', 'user', 'created_at']
 
