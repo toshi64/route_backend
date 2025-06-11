@@ -63,3 +63,34 @@ class MetaAnalysisResult(models.Model):
 
     class Meta:
         unique_together = ("session", "component")  # 1セッション×1コンポーネントに対し1つだけ記録
+
+
+
+
+class QuestionClipForGrammar(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+
+    # 実際の出題内容に基づいたclipなので、AnswerUnitは必須
+    answer_unit = models.ForeignKey(AnswerUnit, on_delete=models.CASCADE)
+
+    # GrammarQuestionも保持（検索・表示用途）
+    grammar_question = models.ForeignKey(GrammarQuestion, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # セッション文脈（分析用）
+    session = models.ForeignKey(Session, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # カリキュラム構造との接続
+    schedule_component = models.ForeignKey(ScheduleComponent, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # 疑問clipのタイトルと内容
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+
+    # 投稿日時
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Clip from {self.user} - {self.title[:20]} ({self.created_at})"

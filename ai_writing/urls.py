@@ -11,4 +11,6 @@ urlpatterns = [
     path('run_meta_analysis/', views.run_meta_analysis, name='run_meta_analysis'),
     path('show_meta_analysis/', views.show_meta_analysis, name='show_meta_analysis'),
     path('show_session_history/', views.show_session_history, name='show_session_history'),
+    path('question_clips/submit/', views.SubmitQuestionClipAPIView.as_view(), name='submit_question_clip'),
+
 ]

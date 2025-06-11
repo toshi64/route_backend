@@ -31,6 +31,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from .serializers import QuestionClipForGrammarSerializer
+
 logger = logging.getLogger(__name__)
 
 
@@ -327,6 +332,7 @@ def submit_answer(request):
 
         return Response({
             'ai_feedback': feedback_text,
+            'answer_unit_id': answer_unit.id, 
             'message': 'Successfully processed and saved your answer!',
         })
 
@@ -398,3 +404,19 @@ def show_meta_analysis(request):
         })
     except MetaAnalysisResult.DoesNotExist:
         return HttpResponse(status=204)
+    
+
+
+class SubmitQuestionClipAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = QuestionClipForGrammarSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            clip = serializer.save()
+            return Response({
+                "message": "疑問clipが正常に保存されました",
+                "clip_id": clip.id
+            }, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
