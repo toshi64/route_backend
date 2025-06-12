@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import QuestionClipForGrammar, GrammarQuestion, AnswerUnit
+from .models import QuestionClipForGrammar, GrammarQuestion, AnswerUnit, AIFeedback
 from instant_feedback.models import Session
 from material_scheduler.models import ScheduleComponent
 
@@ -40,3 +40,36 @@ class QuestionClipForGrammarSerializer(serializers.ModelSerializer):
             schedule_component=schedule_component,
             **validated_data
         )
+
+
+
+
+
+# GrammarQuestion（問題文、ジャンル、模範解答）
+class GrammarQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrammarQuestion
+        fields = ['id', 'question_text', 'genre', 'subgenre', 'answer']
+
+# AIFeedback（AIのフィードバック）
+class AIFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIFeedback
+        fields = ['feedback_text']
+
+# AnswerUnit（ユーザーの回答、紐づくGrammarQuestionとAI Feedbackを含む）
+class AnswerUnitSerializer(serializers.ModelSerializer):
+    question = GrammarQuestionSerializer()
+    ai_feedback = AIFeedbackSerializer()
+
+    class Meta:
+        model = AnswerUnit
+        fields = ['id', 'user_answer', 'created_at', 'question', 'ai_feedback']
+
+# QuestionClipForGrammar（疑問clipのメイン）
+class QuestionClipDetailSerializer(serializers.ModelSerializer):
+    answer_unit = AnswerUnitSerializer()
+
+    class Meta:
+        model = QuestionClipForGrammar
+        fields = ['id', 'content', 'created_at', 'answer_unit']

@@ -35,6 +35,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .serializers import QuestionClipForGrammarSerializer
+from .models import QuestionClipForGrammar
+from .serializers import QuestionClipDetailSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -420,3 +422,14 @@ class SubmitQuestionClipAPIView(APIView):
             }, status=status.HTTP_201_CREATED)
         print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class QuestionClipListAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        clips = QuestionClipForGrammar.objects.filter(user=user).order_by('-created_at')
+        serializer = QuestionClipDetailSerializer(clips, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
