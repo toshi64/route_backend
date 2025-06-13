@@ -13,7 +13,7 @@ from .components.system_prompt_definition import define_system_prompt
 from .models import GrammarQuestion, GrammarNote, AnswerUnit, AIFeedback, MetaAnalysisResult
 from django.utils.timezone import localtime
 from datetime import timedelta
-from .components.prompts import define_meta_analysis_system_prompt
+from .components.prompts import define_meta_analysis_system_prompt, define_system_prompt_for_question
 from .components.call_chatgpt_api_v2 import call_chatgpt_api
 from .components.validator import validate_meta_analysis
 from ai_writing.tasks import run_meta_analysis_task
@@ -296,12 +296,11 @@ def submit_answer(request):
         return Response({'error': 'Authentication required'}, status=403)
 
     data = request.data
-
     session_id = data.get('session_id')
     question_id = data.get('question_id')
     user_answer = data.get('user_answer')
-
     component_id = data.get('component_id')  
+
     component = None
     if component_id:
         try:
@@ -309,7 +308,6 @@ def submit_answer(request):
         except ScheduleComponent.DoesNotExist:
             print(f"[警告] component_id={component_id} が見つかりませんでした。")
 
-    # データ取得・保存処理
     try:
         session = Session.objects.get(session_id=session_id)
         question = GrammarQuestion.objects.get(id=question_id)
@@ -321,10 +319,18 @@ def submit_answer(request):
             user_answer=user_answer,
             component=component
         )
-        
-        user_prompt = generate_user_prompt(data)
-        system_prompt = define_system_prompt()
 
+        # GrammarNoteを取得（subgenreに対応）
+        grammar_note = GrammarNote.objects.filter(
+            subgenre=question.subgenre
+        ).order_by('-version').first()
+    
+        # system/userプロンプトを構築
+        system_prompt = define_system_prompt_for_question(grammar_note)
+        print("いけてんで１１１",system_prompt)
+        user_prompt = generate_user_prompt(data, question)
+        print("いけてんで２２２")
+        # ChatGPT API呼び出し
         feedback_text = call_chatgpt_api(user_prompt, system_prompt)
 
         AIFeedback.objects.create(
