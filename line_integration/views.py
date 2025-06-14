@@ -40,7 +40,14 @@ def line_login_callback(request):
         # ④ Djangoセッションにログイン
         login(request, user)
 
-        return redirect("https://app.route-web.com/first_diagnosis/ai_writing")
+        # 🔽 リダイレクト先を条件で切り替える
+        if state == "xyz123":
+            redirect_url = "https://app.route-web.com/first_diagnosis/ai_writing"
+        else:
+            # state にURLが入っていた場合はそこへ戻す（念のため allowlist チェックも検討）
+            redirect_url = state or "https://app.route-web.com/"  # fallback
+
+        return redirect(redirect_url)
 
     except Exception as e:
         return Response({"error": str(e)}, status=500)
