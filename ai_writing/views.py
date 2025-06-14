@@ -50,12 +50,6 @@ def session_start(request):
     if not user.is_authenticated:
         return Response({'error': 'Authentication required'}, status=403)
 
-    if user.first_ai_writing_done:
-        return Response(
-            {'error': 'このユーザーはすでに受講済みです'},
-            status=409  # 409 Conflict を使用（意味的に適切）
-        )
-
   # ★ セッションIDを発行する
     session_id = generate_session_id()
 
