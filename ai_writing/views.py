@@ -138,6 +138,10 @@ def get_questions_from_component_id(request):
 
         try:
             component = ScheduleComponent.objects.get(component_id=component_id)
+
+            if component.schedule.user != request.user:
+             return JsonResponse({"error": "Unauthorized"}, status=403)
+            
             detail = component.detail  # 例: {"文型": ["SV"], "不定詞": ["to + 動詞"]}
             schedule = component.schedule
 
@@ -198,6 +202,10 @@ def show_progress(request):
 
     try:
         component = ScheduleComponent.objects.get(component_id=component_id)
+
+        if component.schedule.user != request.user:
+          return JsonResponse({"error": "Unauthorized"}, status=403)
+        
         schedule = component.schedule
         user = request.user
 
@@ -327,7 +335,7 @@ def submit_answer(request):
     
         # system/userプロンプトを構築
         system_prompt = define_system_prompt_for_question(grammar_note)
-        print("いけてんで１１１",system_prompt)
+       
         user_prompt = generate_user_prompt(data, question)
         print("いけてんで２２２")
         # ChatGPT API呼び出し
