@@ -13,4 +13,6 @@ urlpatterns = [
     path('show_session_history/', views.show_session_history, name='show_session_history'),
     path('question_clips/submit/', views.SubmitQuestionClipAPIView.as_view(), name='submit_question_clip'),
     path('question_clips/', views.QuestionClipListAPIView.as_view(), name='question-clip-list'),
+    path('add_to_review/', views.add_to_review, name='add_to_review'),
+    path('get_review_questions/', views.get_review_questions, name='get_review_questions'), 
 ]

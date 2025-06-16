@@ -441,3 +441,53 @@ class QuestionClipListAPIView(APIView):
         clips = QuestionClipForGrammar.objects.filter(user=user).order_by('-created_at')
         serializer = QuestionClipDetailSerializer(clips, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_to_review(request):
+    answer_unit_id = request.data.get("answer_unit_id")
+    if not answer_unit_id:
+        return JsonResponse({"error": "answer_unit_id is required"}, status=400)
+
+    try:
+        answer_unit = AnswerUnit.objects.get(id=answer_unit_id, user=request.user)
+        answer_unit.is_review_target = True
+        answer_unit.save()
+        return JsonResponse({"message": "Marked for review successfully."})
+    except AnswerUnit.DoesNotExist:
+        return JsonResponse({"error": "AnswerUnit not found or not owned by user."}, status=404)
+    
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_review_questions(request):
+    user = request.user
+    print("一応呼ばれてますよ")
+    MAX_QUESTIONS = 5  # 取得する問題数の上限
+
+    # is_review_target=TrueのAnswerUnitを取得
+    answer_units = AnswerUnit.objects.filter(user=user, is_review_target=True, question__isnull=False)
+
+    if not answer_units.exists():
+        return JsonResponse([], safe=False)  # 空のリストを返す
+
+    # ランダムにMAX_QUESTIONS件選択
+    selected_units = random.sample(list(answer_units), min(MAX_QUESTIONS, len(answer_units)))
+    # GrammarQuestionデータの整形
+    data = []
+    for unit in selected_units:
+        question = unit.question
+        data.append({
+            "id": question.id,
+            "question_text": question.question_text,
+            "placeholder": "あなたの答えを入力してください",
+            "answer": question.answer,
+            "submit_endpoint": "/api/ai_writing/submit_answer/",
+            "genre": question.genre,
+            "subgenre": question.subgenre,
+            "difficulty": question.difficulty,
+        })
+    return JsonResponse(data, safe=False)

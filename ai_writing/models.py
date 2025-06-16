@@ -46,6 +46,7 @@ class AnswerUnit(models.Model):
     user_answer = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     component = models.ForeignKey(ScheduleComponent, on_delete=models.SET_NULL, null=True, blank=True)
+    is_review_target = models.BooleanField(default=False)
 
 class AIFeedback(models.Model):
     answer = models.OneToOneField(AnswerUnit, on_delete=models.CASCADE, related_name='ai_feedback')
