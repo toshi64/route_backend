@@ -15,4 +15,5 @@ urlpatterns = [
     path('question_clips/', views.QuestionClipListAPIView.as_view(), name='question-clip-list'),
     path('add_to_review/', views.add_to_review, name='add_to_review'),
     path('get_review_questions/', views.get_review_questions, name='get_review_questions'), 
+    path('list_review_candidates/', views.list_review_candidates),
 ]

@@ -73,3 +73,17 @@ class QuestionClipDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionClipForGrammar
         fields = ['id', 'content', 'created_at', 'answer_unit']
+
+
+
+class ReviewCandidateSerializer(serializers.ModelSerializer):
+    question_id = serializers.IntegerField(source='question.id')
+    question_text = serializers.CharField(source='question.question_text')
+    genre = serializers.CharField(source='question.genre')
+    subgenre = serializers.CharField(source='question.subgenre')  # ✅ これを追加
+    difficulty = serializers.IntegerField(source='question.difficulty')
+    created_at = serializers.DateTimeField()
+
+    class Meta:
+        model = AnswerUnit
+        fields = ['question_id', 'question_text', 'genre', 'subgenre', 'difficulty', 'created_at']

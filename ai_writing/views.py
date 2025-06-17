@@ -35,6 +35,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
 from .serializers import QuestionClipForGrammarSerializer
+from .serializers import ReviewCandidateSerializer
 from .models import QuestionClipForGrammar
 from .serializers import QuestionClipDetailSerializer
 
@@ -491,3 +492,20 @@ def get_review_questions(request):
             "difficulty": question.difficulty,
         })
     return JsonResponse(data, safe=False)
+
+
+
+@api_view(['GET'])
+def list_review_candidates(request):
+    user = request.user
+    if not user.is_authenticated:
+        return Response({"error": "Unauthorized"}, status=401)
+
+    answer_units = AnswerUnit.objects.filter(
+        user=user,
+        is_review_target=True,
+        question__isnull=False
+    ).select_related('question').order_by('-created_at')[:50]
+
+    serializer = ReviewCandidateSerializer(answer_units, many=True)
+    return Response(serializer.data)
