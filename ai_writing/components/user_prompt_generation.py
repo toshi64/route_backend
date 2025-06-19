@@ -17,8 +17,6 @@ def generate_user_prompt(answer_dict: dict, question: GrammarQuestion) -> str:
         f"{user_answer}\n\n"
         "【模範解答】\n"
         f"{model_answer}\n\n"
-        "この問題の目的は「上記の文法テーマに対する理解度」を診断することです。\n"
-        "生徒の理解の程度を推測し、適切なフィードバックを与えてください。"
     )
 
     return prompt_body

@@ -330,9 +330,12 @@ def submit_answer(request):
         grammar_note = GrammarNote.objects.filter(
             subgenre=question.subgenre
         ).order_by('-version').first()
-    
+
+        user_name = user.line_display_name
         # system/userプロンプトを構築
-        system_prompt = define_system_prompt_for_question(grammar_note)
+        system_prompt = define_system_prompt_for_question(grammar_note, user_name)
+
+        print(system_prompt)
        
         user_prompt = generate_user_prompt(data, question)
         # ChatGPT API呼び出し
@@ -344,7 +347,7 @@ def submit_answer(request):
                 'feedback_text': feedback_text or '未出力'
             }
         )
-        
+
         return Response({
             'ai_feedback': feedback_text,
             'answer_unit_id': answer_unit.id, 
