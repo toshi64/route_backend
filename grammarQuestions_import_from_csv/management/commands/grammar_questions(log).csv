@@ -1,0 +1,174 @@
+id,custom_id,created_at,updated_at,version,created_by,question_text,genre,subgenre,level,type,difficulty,importance,answer,source,is_active
+,,,,1.0,toshi,「私は走ります。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,I run.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女は神戸に住んでいます。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,She lives in Kobe.,ai_generated,TRUE
+,,,,1.0,toshi,「彼は英語を話しません。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,He doesn't speak English.,ai_generated,TRUE
+,,,,1.0,toshi,「私たちは毎朝早く起きます。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,We get up early every morning.,ai_generated,TRUE
+,,,,1.0,toshi,「私は家にいます。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,I stay home.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女は学校に通っています。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,She goes to school.,ai_generated,TRUE
+,,,,1.0,toshi,「トムは速く走ります。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,Tom runs fast.,ai_generated,TRUE
+,,,,1.0,toshi,「あなたは速く歩きます。」という文を英語にしなさい。,文型,SV,1,free_writing,2,2,You walk fast.,ai_generated,TRUE
+,,,,1.0,toshi,「彼はいつ帰りますか？」という文を英語にしなさい。,文型,SV,1,free_writing,4,2,When does he come home?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたはどこで走りますか？」という文を英語にしなさい。,文型,SV,1,free_writing,4,2,Where do you run?,ai_generated,TRUE
+,,,,1.0,toshi,「彼らはなぜ早く起きますか？」という文を英語にしなさい。,文型,SV,1,free_writing,4,2,Why do they get up early?,ai_generated,TRUE
+,,,,1.0,toshi,「誰がこの部屋を使いますか？」という文を英語にしなさい。,文型,SV,1,free_writing,4,2,Who uses this room?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたはどのように通学しますか？」という文を英語にしなさい。,文型,SV,1,free_writing,4,2,How do you go to school?,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ I run every morning.,文型,SV,1,explanation,2,4,第一文型（SV）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ She lives in Tokyo.,文型,SV,1,explanation,2,4,第一文型（SV）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ They walk to school.,文型,SV,1,explanation,2,4,第一文型（SV）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ We swim in the pool.,文型,SV,1,explanation,2,4,第一文型（SV）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ He sleeps at home.,文型,SV,1,explanation,2,4,第一文型（SV）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：He walk to school every day.,文型,SV,1,error_check,3,2,He walks to school every day.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：I am run every morning.,文型,SV,1,error_check,3,2,I run every morning.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：She go to school on foot.,文型,SV,1,error_check,3,2,She goes to school on foot.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：They walks to the park.,文型,SV,1,error_check,3,2,They walk to the park.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：We gets up early.,文型,SV,1,error_check,3,2,We get up early.,ai_generated,TRUE
+,,,,1.0,toshi,SV文型とは何ですか？日本語で簡潔に説明してください。,文型,SV,1,explanation,5,5,動詞のすぐ後に名詞を置かずに文が完結する文型です。「〜を」と訳せる目的語がなく、動詞のあとには副詞や前置詞句などが続くことが多いです。,ai_generated,TRUE
+,,,,1.0,toshi,SV文型とSVO文型の違いを簡潔に説明してください。,文型,SV,1,explanation,5,5,SV文型は動詞の直後に名詞が来ず、「〜を」と訳す目的語がありません。一方、SVO文型は動詞のすぐ後に名詞（目的語）がきて、「〜を〜する」という意味になります。,ai_generated,TRUE
+,,,,1.0,toshi,SV文型を取る動詞を5個以上挙げなさい。,文型,SV,1,explanation,4,4,"run, go, come, swim, live などのように、目的語を取らずに文が成立する自動詞。
+代表的なものには run（走る）、go（行く）、come（来る）、swim（泳ぐ）、live（住む）などがある。",ai_generated,TRUE
+,,,,1.0,toshi,「その音は大きく聞こえます。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,The sound sounds loud.,ai_generated,TRUE
+,,,,1.0,toshi,「このカレーはおいしい味がします。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,This curry tastes good.,ai_generated,TRUE
+,,,,1.0,toshi,「その花はいい匂いがします。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,The flower smells nice.,ai_generated,TRUE
+,,,,1.0,toshi,「その毛布は柔らかく感じます。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,The blanket feels soft.,ai_generated,TRUE
+,,,,1.0,toshi,「彼は医者になります。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,He becomes a doctor.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女は怒ってきました。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,She grew angry.,ai_generated,TRUE
+,,,,1.0,toshi,「私は疲れを感じます。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,I feel tired.,ai_generated,TRUE
+,,,,1.0,toshi,「スープはちょっとしょっぱい味がします。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,The soup tastes a bit salty.,ai_generated,TRUE
+,,,,1.0,toshi,「その曲は悲しげに聞こえます。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,The song sounds sad.,ai_generated,TRUE
+,,,,1.0,toshi,「彼は有名になりました。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,He became famous.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女は看護師です。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,She is a nurse.,ai_generated,TRUE
+,,,,1.0,toshi,「今日は寒いです。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,It is cold today.,ai_generated,TRUE
+,,,,1.0,toshi,「この部屋はとても静かです。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,This room is very quiet.,ai_generated,TRUE
+,,,,1.0,toshi,「その犬はかわいいです。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,The dog is cute.,ai_generated,TRUE
+,,,,1.0,toshi,「私はとても忙しいです。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,I am very busy.,ai_generated,TRUE
+,,,,1.0,toshi,「私の父は医者です。」という文を英語にしなさい。,文型,SVC,1,free_writing,2,2,My father is a doctor.,ai_generated,TRUE
+,,,,1.0,toshi,「彼はなぜ疲れているのですか？」という文を英語にしなさい。,文型,SVC,4,free_writing,4,2,Why is he tired?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたのお兄さんはどんな人ですか？」という文を英語にしなさい。,文型,SVC,4,free_writing,4,2,What is your brother like?,ai_generated,TRUE
+,,,,1.0,toshi,「そのスープはどんな味ですか？」という文を英語にしなさい。,文型,SVC,4,free_writing,4,2,How does the soup taste?,ai_generated,TRUE
+,,,,1.0,toshi,「彼女はなぜ静かになったのですか？」という文を英語にしなさい。,文型,SVC,4,free_writing,4,2,Why did she become quiet?,ai_generated,TRUE
+,,,,1.0,toshi,「彼はどのように見えますか？」という文を英語にしなさい。,文型,SVC,4,free_writing,4,2,How does he look?,ai_generated,TRUE
+,,,,1.0,toshi,「彼の部屋はとてもきれいです。」という文を英語にしなさい。,文型,SVC,1,free_writing,4,2,His room is very clean.,ai_generated,TRUE
+,,,,1.0,toshi,SVC文型を取る動詞を5個以上挙げなさい。,文型,SVC,1,explanation,4,4,"be, become, seem, look, sound, taste, smell, feel, get, grow などのように、主語の状態や変化、知覚を表し、補語を必要とする動詞。",ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ She is a teacher.,文型,SVC,1,explanation,2,3,第二文型（SVC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ He looks happy.,文型,SVC,1,explanation,2,3,第二文型（SVC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ It became cold.,文型,SVC,1,explanation,2,3,第二文型（SVC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ The soup smells good.,文型,SVC,1,explanation,2,3,第二文型（SVC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ This book is interesting.,文型,SVC,1,explanation,2,3,第二文型（SVC）,ai_generated,TRUE
+,,,,1.0,toshi,SVC文型で使われる補語とは何ですか？簡潔に説明してください。,文型,SVC,1,explanation,5,4,補語とは、主語の状態や性質を説明する語で、SVC文型では主語とイコールの関係になります。形容詞や名詞がよく使われます。,ai_generated,TRUE
+,,,,1.0,toshi,次の文がSVC文型である理由を簡潔に説明してください：She became a teacher.,文型,SVC,1,explanation,5,4,「became」はSVC型の動詞で、主語「She」と補語「a teacher」がイコールの関係にあるため、SVC文型になります。,ai_generated,TRUE
+,,,,1.0,toshi,SVC文型とは何ですか？日本語で簡潔に説明してください。,文型,SVC,1,explanation,5,3,SVC文型は、主語（S）＋動詞（V）＋補語（C）で構成され、主語の状態や性質を説明する文型です。補語は主語を説明する語で、形容詞や名詞がよく使われます。,ai_generated,TRUE
+,,,,1.0,toshi,SVC文型とSVO文型の違いを簡潔に説明してください。,文型,SVC,1,explanation,5,3,SVC文型は動詞の後に主語の状態を表す語（補語）がきて、「〜は〜である」と訳されます。SVO文型は動詞の後に目的語がきて、「〜を〜する」と訳されます。,ai_generated,TRUE
+,,,,1.0,toshi,SVC文型とSV文型の違いを簡潔に説明してください。,文型,SVC,1,explanation,5,3,SV文型は主語と動詞だけで文が完結しますが、SVC文型は主語の状態や性質を伝える補語が必要です。補語がないと意味が不完全になります。,ai_generated,TRUE
+,,,,1.0,toshi,「私は英語を話します。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,I speak English.,ai_generated,TRUE
+,,,,1.0,toshi,「彼はサッカーをします。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,He plays soccer.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女はピアノを弾きます。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,She plays the piano.,ai_generated,TRUE
+,,,,1.0,toshi,「私たちは新聞を読みます。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,We read the newspaper.,ai_generated,TRUE
+,,,,1.0,toshi,「彼らは昼ごはんを食べます。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,They eat lunch.,ai_generated,TRUE
+,,,,1.0,toshi,「あなたはテレビを見ます。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,You watch TV.,ai_generated,TRUE
+,,,,1.0,toshi,「トムはジュースを飲みます。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,Tom drinks juice.,ai_generated,TRUE
+,,,,1.0,toshi,「私は音楽を聴きます。」という文を英語にしなさい。,文型,SVO,1,free_writing,2,2,I listen to music.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ I play tennis every weekend.,文型,SVO,1,explanation,2,4,第三文型（SVO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ She reads books every night.,文型,SVO,1,explanation,2,4,第三文型（SVO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ They eat lunch at noon.,文型,SVO,1,explanation,2,4,第三文型（SVO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ He drinks coffee in the morning.,文型,SVO,1,explanation,2,4,第三文型（SVO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ We watch movies on weekends.,文型,SVO,1,explanation,2,4,第三文型（SVO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：She is speak English.,文型,SVO,1,error_check,3,2,She speaks English.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：He play with soccer.,文型,SVO,1,error_check,3,2,He plays soccer.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：I am like music.,文型,SVO,1,error_check,3,2,I like music.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：They are study English.,文型,SVO,1,error_check,3,2,They study English.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：What you like this movie?,文型,SVO,1,error_check,3,2,Why do you like this movie?,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：Where he go after school?,文型,SVO,1,error_check,3,2,Where does he go after school?,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：What is he read?,文型,SVO,1,error_check,3,2,What does he read?,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：How you go to school?,文型,SVO,1,error_check,3,2,How do you go to school?,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：Why he likes music?,文型,SVO,1,error_check,3,2,Why does he like music?,ai_generated,TRUE
+,,,,1.0,toshi,SV文型とSVO文型の違いを簡潔に説明してください。,文型,SVO,1,explanation,5,5,SV文型は動詞の直後に名詞が来ず、「〜を」と訳す目的語がありません。一方、SVO文型は動詞のすぐ後に名詞（目的語）がきて、「〜を〜する」という意味になります。,ai_generated,TRUE
+,,,,1.0,toshi,SVO文型をとる動詞を5個以上挙げなさい,文型,SVO,1,explanation,4,4,"like, know, have, play, use, eat, make, find, call, buy など。
+これらは「〜を〜する」という形をとる動詞で、動詞のあとに目的語（〜を）が必要です。",ai_generated,TRUE
+,,,,1.0,toshi,「彼は私にプレゼントをくれました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,He gave me a present.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼にメールを送りました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,I sent him an email.,ai_generated,TRUE
+,,,,1.0,toshi,「母は私にお金をくれました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,My mother gave me some money.,ai_generated,TRUE
+,,,,1.0,toshi,「彼らは私たちに素晴らしいニュースを伝えました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,They told us great news.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼女に英語を教えました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,I taught her English.,ai_generated,TRUE
+,,,,1.0,toshi,「父は私にその本を買ってくれました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,My father bought me the book.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼に地図を見せました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,I showed him the map.,ai_generated,TRUE
+,,,,1.0,toshi,「先生は彼女に英語を教えました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,The teacher taught her English.,ai_generated,TRUE
+,,,,1.0,toshi,「母は私においしいケーキを作ってくれました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,My mother made me a delicious cake.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼にチケットを取ってあげました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,I got him a ticket.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女は私たちに夕食を作ってくれました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,She cooked us dinner.,ai_generated,TRUE
+,,,,1.0,toshi,「彼は子どもたちに絵本を読んであげました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,He read the children a picture book.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼に新しいシャツを選んであげました。」という文を英語にしなさい。,文型,SVOO,1,free_writing,2,2,I chose him a new shirt.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：gave / her / he / a gift,文型,SVOO,1,reorder,1,3,He gave her a gift.　彼は彼女にプレゼントをあげた。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：sent / them / she / an email,文型,SVOO,1,reorder,1,3,She sent them an email.　彼女は彼らにメールを送った。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：showed / the teacher / us / our mistakes,文型,SVOO,1,reorder,1,3,The teacher showed us our mistakes.　先生は私たちに自分たちの間違いを見せた。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：bought / me / my friend / a book,文型,SVOO,1,reorder,1,3,My friend bought me a book.　私の友人は私に本を買ってくれた。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：offered / the job / they / him,文型,SVOO,1,reorder,1,3,They offered him the job.　彼らは彼にその仕事を申し出た。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：told / her / I / the truth,文型,SVOO,1,reorder,1,3,I told her the truth.　私は彼女に本当のことを話した。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：taught / English / he / us,文型,SVOO,1,reorder,1,3,He taught us English.　彼は私たちに英語を教えた。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：lent / me / she / some money,文型,SVOO,1,reorder,1,3,She lent me some money.　彼女は私にいくらかお金を貸してくれた。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：handed / the manager / the documents / he,文型,SVOO,1,reorder,1,3,He handed the manager the documents.　彼はマネージャーに書類を手渡した。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：brought / dinner / she / us,文型,SVOO,1,reorder,1,3,She brought us dinner.　彼女は私たちに夕食を持ってきてくれた。,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ I gave him a book.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ She told me a story.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ They showed us the way.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ My mother made me a cake.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ He bought her a present.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ The teacher taught us English.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ I got him a ticket.,文型,SVOO,1,explanation,2,3,第四文型（SVOO）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 I gave him a book.,文型,SVOO,1,rephrase,2,3,I gave a book to him.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 She told me the truth.,文型,SVOO,1,rephrase,2,3,She told the truth to me.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 He showed us the photo.,文型,SVOO,1,rephrase,2,3,He showed the photo to us.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 They sent me a message.,文型,SVOO,1,rephrase,2,3,They sent a message to me.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 She wrote her friend a letter.,文型,SVOO,1,rephrase,2,3,She wrote a letter to her friend.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 My mom made me a sandwich.,文型,SVOO,1,rephrase,2,3,My mom made a sandwich for me.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 He cooked us dinner.,文型,SVOO,1,rephrase,2,3,He cooked dinner for us.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文を SVO の形に書き換えなさい。 I bought her a gift.,文型,SVOO,1,rephrase,2,3,I bought a gift for her.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：She gave to me a present.,文型,SVOO,1,error_check,3,2,She gave me a present.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：He teach to me English.,文型,SVOO,1,error_check,3,2,He teaches me English.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：They showed the answer us.,文型,SVOO,1,error_check,3,2,They showed us the answer.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：My father bought a gift me.,文型,SVOO,1,error_check,3,2,My father bought me a gift.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：She told to us the story.,文型,SVOO,1,error_check,3,2,She told us the story.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：He gave me it.,文型,SVOO,1,error_check,3,2,He gave it to me.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：We showed to them our new house.,文型,SVOO,1,error_check,3,2,We showed them our new house.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：They give to us a chance.,文型,SVOO,1,error_check,3,2,They give us a chance.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：Can you lend to me your pen?,文型,SVOO,1,error_check,3,2,Can you lend me your pen?,ai_generated,TRUE
+,,,,1.0,toshi,SVOO文型を取る動詞を5個以上挙げなさい。,文型,SVOO,1,explanation,3,4,"give, show, teach, tell, send, offer, bring, buy, make, read など",ai_generated,TRUE
+,,,,1.0,toshi,「彼は誰にその本を渡しましたか？」という文を英語にしなさい。,文型,SVOO,1,free_writing,4,3,Who did he give the book to?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたは何を彼女に教えましたか？」という文を英語にしなさい。,文型,SVOO,1,free_writing,4,3,What did you teach her?,ai_generated,TRUE
+,,,,1.0,toshi,「誰が君にその地図を見せたのですか？」という文を英語にしなさい。,文型,SVOO,1,free_writing,4,3,Who showed you the map?,ai_generated,TRUE
+,,,,1.0,toshi,「彼女は誰にこのプレゼントを買いましたか？」という文を英語にしなさい。,文型,SVOO,1,free_writing,4,3,Who did she buy this present for?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたはいつ彼にその手紙を送ったのですか？」という文を英語にしなさい。,文型,SVOO,1,free_writing,4,3,When did you send him the letter?,ai_generated,TRUE
+,,,,1.0,toshi,「彼は私を幸せにします。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,He makes me happy.,ai_generated,TRUE
+,,,,1.0,toshi,「その映画は彼を有名にしました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,The movie made him famous.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼女をクラスのリーダーに選びました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,I chose her the leader of the class.,ai_generated,TRUE
+,,,,1.0,toshi,「その知らせは彼女を怒らせました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,The news made her angry.,ai_generated,TRUE
+,,,,1.0,toshi,「みんなは彼をヒーローと呼びます。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,Everyone calls him a hero.,ai_generated,TRUE
+,,,,1.0,toshi,「私はその部屋をきれいに保っています。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,I keep the room clean.,ai_generated,TRUE
+,,,,1.0,toshi,「彼らはその赤ちゃんにジョンという名前をつけました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,They named the baby John.,ai_generated,TRUE
+,,,,1.0,toshi,「私は彼をとても親切だと思いました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,2,2,I found him very kind.,ai_generated,TRUE
+,,,,1.0,toshi,「彼らはその本をとても面白いと感じました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,4,2,They found the book very interesting.,ai_generated,TRUE
+,,,,1.0,toshi,「私はその教室を空だと気づきました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,4,2,I found the classroom empty.,ai_generated,TRUE
+,,,,1.0,toshi,「私はその映画を退屈だと思いました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,4,2,I thought the movie boring.,ai_generated,TRUE
+,,,,1.0,toshi,「彼女はその壁を白に塗りました。」という文を英語にしなさい。,文型,SVOC,1,free_writing,4,2,She painted the wall white.,ai_generated,TRUE
+,,,,1.0,toshi,「彼らがなぜ彼をリーダーと呼んだのか」を英語で言いなさい。,文型,SVOC,1,free_writing,4,2,Why did they call him a leader?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたがその部屋をなぜきれいに保っているのか」を英語で言いなさい。,文型,SVOC,1,free_writing,4,2,Why do you keep the room clean?,ai_generated,TRUE
+,,,,1.0,toshi,「彼がその赤ちゃんに何という名前をつけたか」を英語で言いなさい。,文型,SVOC,1,free_writing,4,2,What did he name the baby?,ai_generated,TRUE
+,,,,1.0,toshi,「あなたがその映画をどう思ったか」を英語で言いなさい。,文型,SVOC,1,free_writing,4,2,What did you think of the movie?,ai_generated,TRUE
+,,,,1.0,toshi,「先生が彼女をどう思ったのか」を英語で言いなさい。,文型,SVOC,1,free_writing,4,2,What did the teacher find her?,ai_generated,TRUE
+,,,,1.0,toshi,「彼女が壁を何色に塗ったか」を英語で言いなさい。,文型,SVOC,1,free_writing,4,2,What color did she paint the wall?,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：We kept the window to open.,文型,SVOC,1,error_check,3,2,We kept the window open.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：I thought him was honest.,文型,SVOC,1,error_check,3,2,I thought him honest.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文の間違いを正しい形に直しなさい：He thought her is kind.,文型,SVOC,1,error_check,3,2,He thought her kind.,ai_generated,TRUE
+,,,,1.0,toshi,SVOC文型とは何ですか？日本語で簡潔に説明してください。,文型,SVOC,1,explanation,5,5,SVOC文型は、主語（S）＋動詞（V）＋目的語（O）＋補語（C）で構成され、目的語の状態や性質を説明する文型です。補語は目的語に対して「どんな状態か」「何であるか」を示し、名詞や形容詞が使われます。,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：found / the box / I / empty,文型,SVOC,1,reorder,1,2,I found the box empty.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：kept / her / I / happy,文型,SVOC,1,reorder,1,2,I kept her happy.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：called / him / she / a genius,文型,SVOC,1,reorder,1,2,She called him a genius.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：considered / honest / we / him,文型,SVOC,1,reorder,1,2,We considered him honest.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：named / we / the dog / Pochi,文型,SVOC,1,reorder,1,2,We named the dog Pochi.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：found / the room / I / clean,文型,SVOC,1,reorder,1,2,I found the room clean.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：left / him / I / alone,文型,SVOC,1,reorder,1,2,I left him alone.,ai_generated,TRUE
+,,,,1.0,toshi,次の語を並びかえて、正しい文を完成させなさい：painted / the wall / we / red,文型,SVOC,1,reorder,1,2,We painted the wall red.,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ We elected him president.,文型,SVOC,1,explanation,2,3,第五文型（SVOC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ She painted the wall white.,文型,SVOC,1,explanation,2,3,第五文型（SVOC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ They named the baby Emma.,文型,SVOC,1,explanation,2,3,第五文型（SVOC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ I found the movie interesting.,文型,SVOC,1,explanation,2,3,第五文型（SVOC）,ai_generated,TRUE
+,,,,1.0,toshi,次の英文は第何文型ですか？ He made me angry.,文型,SVOC,1,explanation,2,3,第五文型（SVOC）,ai_generated,TRUE

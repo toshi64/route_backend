@@ -315,13 +315,16 @@ def submit_answer(request):
         session = Session.objects.get(session_id=session_id)
         question = GrammarQuestion.objects.get(id=question_id)
 
-        answer_unit = AnswerUnit.objects.create(
+        answer_unit, created = AnswerUnit.objects.update_or_create(
             session=session,
             question=question,
             user=user,
-            user_answer=user_answer,
-            component=component
+            defaults={
+                'user_answer': user_answer,
+                'component': component
+            }
         )
+
 
         # GrammarNoteを取得（subgenreに対応）
         grammar_note = GrammarNote.objects.filter(
@@ -332,15 +335,16 @@ def submit_answer(request):
         system_prompt = define_system_prompt_for_question(grammar_note)
        
         user_prompt = generate_user_prompt(data, question)
-        print("いけてんで２２２")
         # ChatGPT API呼び出し
         feedback_text = call_chatgpt_api(user_prompt, system_prompt)
 
-        AIFeedback.objects.create(
+        AIFeedback.objects.update_or_create(
             answer=answer_unit,
-            feedback_text=feedback_text or '未出力'
+            defaults={
+                'feedback_text': feedback_text or '未出力'
+            }
         )
-
+        
         return Response({
             'ai_feedback': feedback_text,
             'answer_unit_id': answer_unit.id, 
