@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'ai_writing',
     'material_scheduler',
     'grammarQuestions_import_from_csv',
+    'tadoku', 
 ]
 
 MIDDLEWARE = [

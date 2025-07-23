@@ -27,4 +27,5 @@ urlpatterns = [
     path('api/teacher_dashboard/', include('teacher_dashboard.urls')),
     path('api/ai_writing/', include('ai_writing.urls')),
     path('api/material_scheduler/', include('material_scheduler.urls')),
+    path('api/tadoku/', include('tadoku.urls')), 
 ]
