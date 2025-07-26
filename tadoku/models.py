@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.db.models import Q, F 
 
 class Material(models.Model):
     """Tadoku教材マスターテーブル"""
@@ -41,3 +41,100 @@ class MaterialSection(models.Model):
 
     def __str__(self):
         return f"{self.material.title} - Section {self.section_number}"
+    
+
+
+
+from django.db import models
+from django.contrib.auth import get_user_model
+import uuid
+
+User = get_user_model()
+
+class TadokuSession(models.Model):
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('paused', 'Paused'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tadoku_sessions')
+    learning_context_id = models.CharField(max_length=36, null=True, blank=True, db_index=True)
+    material = models.ForeignKey('Material', on_delete=models.PROTECT)
+    target_cycles = models.PositiveIntegerField(default=5)
+    completed_cycles = models.PositiveIntegerField(default=0)
+    session_date = models.DateField(db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'tadoku_sessions'
+        ordering = ['-session_date', '-created_at']
+        indexes = [
+            models.Index(fields=['user', 'session_date']),
+            models.Index(fields=['learning_context_id']),
+        ]
+    
+    def __str__(self):
+        return f"TadokuSession({self.user.username}, {self.learning_context_id or 'No Context'}, {self.session_date})"
+    
+    @property
+    def is_completed(self):
+        return self.completed_cycles >= self.target_cycles
+    
+    @property
+    def current_cycle(self):
+        return self.completed_cycles + 1
+    
+    @property
+    def progress_percentage(self):
+        if self.target_cycles == 0:
+            return 0
+        return min(100, (self.completed_cycles / self.target_cycles) * 100)
+    
+
+
+class TadokuSessionStats(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    session = models.ForeignKey(TadokuSession, on_delete=models.CASCADE, related_name='cycle_stats')
+    cycle_number = models.PositiveIntegerField()
+    sound_only_count = models.PositiveIntegerField(default=0)
+    text_count = models.PositiveIntegerField(default=0)
+    translation_count = models.PositiveIntegerField(default=0)
+    total_pages = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'tadoku_session_stats'
+        unique_together = [('session', 'cycle_number')]
+        constraints = [
+            models.CheckConstraint(
+                check=Q(total_pages=F('sound_only_count') + F('text_count') + F('translation_count')),
+                name='check_total_equals_sum'
+            )
+        ]
+        indexes = [
+            models.Index(fields=['session']),
+            models.Index(fields=['cycle_number']),
+        ]
+        
+    def __str__(self):
+        return f"Stats({self.session.id}, Cycle:{self.cycle_number}, S:{self.sound_only_count}/T:{self.text_count}/TR:{self.translation_count})"
+
+    @property  
+    def sound_ratio(self):
+        return (self.sound_only_count / self.total_pages * 100) if self.total_pages > 0 else 0
+        
+    @property
+    def text_ratio(self):
+        return (self.text_count / self.total_pages * 100) if self.total_pages > 0 else 0
+        
+    @property
+    def translation_ratio(self):
+        return (self.translation_count / self.total_pages * 100) if self.total_pages > 0 else 0
