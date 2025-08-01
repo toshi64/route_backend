@@ -193,6 +193,11 @@ def get_questions_from_component_id(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def show_progress(request):
+    """
+    DEPRECATED 2025-07-28:
+    Tadoku/Stra リファクタに伴いフロントから呼ばれなくなった。
+    URL ルーティングからも除外済み。将来不要なら削除。
+    """
     component_id = request.data.get('component_id')
 
     try:
@@ -290,6 +295,56 @@ def show_session_history(request):
     return Response({"session_history": response_data})
 
 
+from django.db import transaction
+from django.utils import timezone
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+def call_gpt_with_retry(user_prompt, system_prompt, retries=3):
+    """
+    ChatGPT APIを呼び出し、JSON形式での応答を試行する
+    """
+    raw_response = ""  # 外側でキャプチャ
+    
+    for attempt in range(retries):
+        try:
+            raw_response = call_chatgpt_api(user_prompt, system_prompt)
+            logger.info(f"=== ChatGPT Raw Response (Attempt {attempt + 1}) ===")
+            logger.info(raw_response)
+            
+            # JSONパース試行
+            parsed_data = json.loads(raw_response)
+            feedback = parsed_data.get("feedback", "")
+            grade = parsed_data.get("grade", "")
+            
+            # グレードバリデーション
+            if grade in {"A", "B", "C", "D"} and feedback:
+                logger.info(f"=== Valid Response ===")
+                logger.info(f"Feedback: {feedback}")
+                logger.info(f"Grade: {grade}")
+                return {
+                    "feedback": feedback,
+                    "grade": grade,
+                    "raw_response": raw_response,
+                    "attempt": attempt + 1
+                }
+            else:
+                logger.warning(f"Invalid grade or missing feedback: grade={grade}, feedback_length={len(feedback)}")
+                
+        except (ValueError, TypeError, json.JSONDecodeError) as e:
+            logger.warning(f"JSON parse error on attempt {attempt + 1}: {e}")
+            # 修正3: 追加のAPI呼び出しを削除
+    
+    # 全ての試行が失敗した場合
+    logger.error("All retry attempts failed. Using fallback response.")
+    return {
+        "feedback": raw_response if raw_response else "AI応答の取得に失敗しました。",
+        "grade": None,
+        "raw_response": raw_response,
+        "attempt": retries
+    }
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -299,48 +354,63 @@ def submit_answer(request):
         return Response({'error': 'Authentication required'}, status=403)
 
     data = request.data
-    session_id = data.get('session_id')
+    cycle_session_id = data.get('cycle_session_id')
     question_id = data.get('question_id')
     user_answer = data.get('user_answer')
-    component_id = data.get('component_id')  
 
-    component = None
-    if component_id:
+    # パラメータ必須チェック
+    if not all([cycle_session_id, question_id, user_answer]):
+        return Response({'error': 'missing parameter'}, status=400)
+
+    # トランザクション全体を包む
+    with transaction.atomic():
         try:
-            component = ScheduleComponent.objects.get(component_id=component_id)
-        except ScheduleComponent.DoesNotExist:
-            print(f"[警告] component_id={component_id} が見つかりませんでした。")
+            cycle_session = (StraCycleSession.objects
+                            .select_for_update()
+                            .get(id=cycle_session_id))
+        except StraCycleSession.DoesNotExist:
+            return Response({'error': '無効なサイクルセッションIDです'}, status=400)
 
-    try:
-        session = Session.objects.get(session_id=session_id)
-        question = GrammarQuestion.objects.get(id=question_id)
+        try:
+            question = GrammarQuestion.objects.get(id=question_id)
+        except GrammarQuestion.DoesNotExist:
+            return Response({'error': '無効な問題IDです'}, status=400)
 
+        # AnswerUnit作成（sessionはnull=True対応済み）
         answer_unit, created = AnswerUnit.objects.update_or_create(
-            session=session,
+            stra_cycle_session=cycle_session,
             question=question,
             user=user,
             defaults={
                 'user_answer': user_answer,
-                'component': component
             }
         )
 
+        # GrammarNote取得
+        grammar_note = (GrammarNote.objects
+                       .filter(subgenre_fk=question.subgenre_fk)
+                       .order_by('-version')
+                       .first())
 
-        # GrammarNoteを取得（subgenreに対応）
-        grammar_note = GrammarNote.objects.filter(
-            subgenre=question.subgenre
-        ).order_by('-version').first()
+        if not grammar_note:
+            return Response({'error': '該当する文法ノートが見つかりません'}, status=400)
 
         user_name = user.line_display_name
-        # system/userプロンプトを構築
         system_prompt = define_system_prompt_for_question(grammar_note, user_name)
-
-        print(system_prompt)
-       
         user_prompt = generate_user_prompt(data, question)
-        # ChatGPT API呼び出し
-        feedback_text = call_chatgpt_api(user_prompt, system_prompt)
+        
+        # ChatGPT API呼び出し（リトライ機能付き）
+        gpt_result = call_gpt_with_retry(user_prompt, system_prompt, retries=3)
+        
+        feedback_text = gpt_result["feedback"]
+        grade = gpt_result["grade"]
+        
+        # グレードの最終バリデーション
+        if grade not in {"A", "B", "C", "D"}:
+            grade = None
+            logger.warning(f"Invalid grade received: {grade}. Setting to None.")
 
+        # AIFeedback保存
         AIFeedback.objects.update_or_create(
             answer=answer_unit,
             defaults={
@@ -348,20 +418,51 @@ def submit_answer(request):
             }
         )
 
-        return Response({
-            'ai_feedback': feedback_text,
-            'answer_unit_id': answer_unit.id, 
-            'message': 'Successfully processed and saved your answer!',
-        })
+        # ▲ 必須修正1: StraAnswerEvaluation保存
+        if grade:
+            from .models import StraAnswerEvaluation  # モデル名修正
+            StraAnswerEvaluation.objects.update_or_create(
+                answer_unit=answer_unit,  # フィールド名修正
+                defaults={
+                    "overall_grade": grade,  # フィールド名修正
+                    "raw_evaluation_json": gpt_result  # 修正4: dict→JSONField自動シリアライズ
+                }
+            )
+            logger.info(f"Grade {grade} saved for answer_unit {answer_unit.id}")
 
-    except Session.DoesNotExist:
-        return Response({'error': '無効なセッションIDです'}, status=400)
-    except GrammarQuestion.DoesNotExist:
-        return Response({'error': '無効な問題IDです'}, status=400)
-    except Exception as e:
-        return Response({'error': str(e)}, status=500)
+        # ▲ 必須修正3: COUNT最適化とtarget_questions動的取得
+        total_answers = AnswerUnit.objects.filter(
+            stra_cycle_session=cycle_session
+        ).count()
+        
+        # ◆ 改善点: ハードコード排除
+        target_questions = getattr(cycle_session.stra_session, 'target_cycles', 5)
+        
+        # サイクル完了チェック
+        if total_answers >= target_questions and not cycle_session.completed_at:
+            cycle_session.completed_at = timezone.now()
+            cycle_session.save(update_fields=["completed_at"])
+            logger.info(f"Cycle session {cycle_session.id} completed with {total_answers} answers")
 
+    # 成功時のレスポンス
+    response_data = {
+        'ai_feedback': feedback_text,
+        'answer_unit_id': answer_unit.id,
+        'grade': grade,
+        'cycle_completed': bool(cycle_session.completed_at),
+        'total_answers': total_answers,
+        'target_questions': target_questions,
+        'message': 'Successfully processed and saved your answer!',
+    }
+    
+    # デバッグ情報（開発時のみ）
+    if 'attempt' in gpt_result:  # 修正2: dict判定修正
+        response_data['debug_info'] = {
+            'attempts_used': gpt_result.get('attempt', 1),
+            'raw_response_length': len(gpt_result.get('raw_response', ''))
+        }
 
+    return Response(response_data, status=200)
 
 
 @api_view(['GET'])
@@ -383,6 +484,11 @@ def get_grammar_note(request):
 
 @api_view(['POST'])
 def run_meta_analysis(request):
+    """
+    DEPRECATED 2025-07-28:
+    Tadoku/Stra リファクタに伴いフロントから呼ばれなくなった。
+    URL ルーティングからも除外済み。将来不要なら削除。
+    """
     session_id = request.data.get("session_id")
     component_id = request.data.get("component_id")
 
@@ -398,6 +504,11 @@ def run_meta_analysis(request):
 
 @csrf_exempt
 def show_meta_analysis(request):
+    """
+    DEPRECATED 2025-07-28:
+    Tadoku/Stra リファクタに伴いフロントから呼ばれなくなった。
+    URL ルーティングからも除外済み。将来不要なら削除。
+    """
     if request.method != 'GET':
         return JsonResponse({"error": "Invalid method"}, status=405)
 
@@ -516,3 +627,292 @@ def list_review_candidates(request):
 
     serializer = ReviewCandidateSerializer(answer_units, many=True)
     return Response(serializer.data)
+
+
+
+
+
+
+
+# utils.py
+from django.utils import timezone
+
+def local_today():
+    """03:00切り上げでの日付取得（夜型学習者対応）"""
+    return (timezone.now() - timezone.timedelta(hours=3)).date()
+
+
+# views.py
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils import timezone
+from django.db import transaction
+import random
+import uuid
+
+from .models import (
+    StraSession, StraCycleSession, GrammarSubgenre, 
+    GrammarQuestion, GrammarNote
+)
+from .serializers import (
+    StraSessionSerializer, StraCycleSessionSerializer,
+    GrammarQuestionSerializer, GrammarNoteSerializer
+)
+from .utils import local_today
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_session(request):
+    """
+    Straセッション開始API
+    
+    フロー:
+    1. 未完了セッション確認
+    2. なければ新規セッション作成
+    3. 次周回のサイクルセッション作成
+    4. 問題5問とGrammarNote取得
+    5. 一括レスポンス
+    """
+    
+    user = request.user
+    today = local_today()  # 03:00切り上げ対応
+    
+    try:
+        with transaction.atomic():
+            # 1. 未完了セッション確認
+            stra_session = get_or_create_today_session(user, today)
+            
+            # 2. 次周回のサイクルセッション作成
+            cycle_session = create_next_cycle_session(stra_session)
+            
+            # 3. 問題とNote取得（既回答を含める）
+            questions_payload = build_questions_with_progress(cycle_session)
+            grammar_note = get_grammar_note(stra_session.material)
+            
+            # 4. レスポンス構築
+            response_data = {
+                'stra_session': StraSessionSerializer(stra_session).data,
+                'stra_cycle_session': StraCycleSessionSerializer(cycle_session).data,
+                'questions': questions_payload,
+                'grammar_note': GrammarNoteSerializer(grammar_note).data if grammar_note else None,
+                'user_info': { 
+                    'id': user.id,
+                    'username': user.username,
+                    'display_name': getattr(user, 'line_display_name', None) or user.username,
+                },
+                'session_info': {
+                    'current_cycle': cycle_session.cycle_index,
+                    'total_cycles': stra_session.target_cycles,
+                    'progress_percentage': stra_session.progress_percentage
+                }
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+    except ValueError as e:
+        # 完了済みセッションなど、ビジネスロジックエラー
+        return Response(
+            {'error': str(e)}, 
+            status=status.HTTP_409_CONFLICT
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'セッション開始エラー: {str(e)}'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+def get_or_create_today_session(user, session_date):
+    """
+    当日のStraSessionを取得または作成
+    並列アクセス対策でselect_for_update()使用
+    """
+    # 未完了セッション確認（排他ロック）
+    incomplete_session = (StraSession.objects
+        .select_for_update()  # 並列POST対策
+        .filter(
+            user=user,
+            status__in=[StraSession.StatusChoices.ACTIVE, StraSession.StatusChoices.REVIEW],
+            session_date=session_date
+        ).first())
+    
+    if incomplete_session:
+        return incomplete_session
+    
+    # 新規セッション作成
+    # ダミーのスケジューラーロジック
+    material = get_next_material_for_user(user)
+    
+    stra_session = StraSession.objects.create(
+        user=user,
+        material=material,
+        session_date=session_date,
+        target_cycles=5,
+        status=StraSession.StatusChoices.ACTIVE
+    )
+    
+    return stra_session
+
+
+def get_next_material_for_user(user):
+    """
+    ユーザーの次の学習教材を取得（ダミー実装）
+    TODO: 実際のスケジューラー実装時に置き換え
+    """
+    # ダミーのキュー（実際はDBから取得）
+    dummy_queue = [
+        {'stra_material_code': 'SV'},
+        {'stra_material_code': 'SVO'},
+        {'stra_material_code': 'Relative_Clause'},
+        {'stra_material_code': 'Past_Perfect'},
+    ]
+    
+    # ユーザーの進行状況確認（完了済みセッション数）
+    completed_sessions_count = StraSession.objects.filter(
+        user=user,
+        status=StraSession.StatusChoices.COMPLETED
+    ).count()
+    
+    # 次の教材を決定
+    if completed_sessions_count < len(dummy_queue):
+        next_material_code = dummy_queue[completed_sessions_count]['stra_material_code']
+    else:
+        # 復習モード（ランダム）
+        next_material_code = random.choice(dummy_queue)['stra_material_code']
+    
+    # GrammarSubgenreから取得
+    try:
+        return GrammarSubgenre.objects.get(code=next_material_code)
+    except GrammarSubgenre.DoesNotExist:
+        # フォールバック: 最初の教材
+        return GrammarSubgenre.objects.first()
+
+
+def create_next_cycle_session(stra_session):
+    """
+    次周回のStraCycleSession作成
+    競合状態対策でselect_for_update()使用
+    """
+    next_cycle_index = stra_session.get_next_cycle_index()
+    
+    if next_cycle_index is None:
+        raise ValueError("セッションは既に完了済みです")
+    
+    # 既存で still_open な Cycle があればそれを返す
+    existing_cycle = (StraCycleSession.objects
+        .select_for_update()  # 並列POST対策
+        .filter(
+            stra_session=stra_session,
+            cycle_index=next_cycle_index,
+            completed_at__isnull=True
+        ).first())
+    
+    if existing_cycle:
+        return existing_cycle
+    
+    # 新規サイクルセッション作成
+    cycle_session = StraCycleSession.objects.create(
+        stra_session=stra_session,
+        cycle_index=next_cycle_index,
+        material=stra_session.material,
+        session_id=uuid.uuid4().hex,  # ランダムUUID（安全性向上）
+        started_at=timezone.now()
+    )
+    
+    return cycle_session
+
+
+def get_random_questions(material, count=5):
+    """
+    指定された教材からランダムに問題を取得
+    TODO: 大規模データ対応時はプリフェッチまたはランダムID抽出方式に変更
+    """
+    questions = GrammarQuestion.objects.filter(
+        subgenre_fk=material,
+        is_active=True
+    ).order_by('?')[:count]  # 将来的にパフォーマンス要改善
+    
+    if questions.count() < count:
+        # 問題数が不足している場合の警告
+        print(f"Warning: {material.code}の問題数が不足しています ({questions.count()}/{count})")
+    
+    return questions
+
+
+def get_grammar_note(material):
+    """
+    指定された教材のGrammarNoteを取得（軽量化）
+    """
+    try:
+        return (GrammarNote.objects
+            .filter(subgenre_fk=material)
+            .only('id', 'custom_id', 'title', 'description')  # 必要列のみ取得
+            .first())
+    except GrammarNote.DoesNotExist:
+        return None
+    
+
+# ---------- ★ REPLACE: 未完了 Cycle 用の質問ビルダー ----------
+from .models import AnswerUnit, GrammarQuestion
+
+def build_questions_with_progress(cycle_session, count=5):
+    """
+    既回答 AU を必ず含めて、不足分だけ新規問題を補充する
+    """
+    # ① 既回答 AU 一式を取得
+    answered_aus = (cycle_session.answer_units
+                    .select_related('question', 'ai_feedback', 'evaluation')
+                    .order_by('created_at'))          # 古→新で安定表示
+
+    answered_ids = [au.question_id for au in answered_aus]
+    answered_count = len(answered_ids)
+
+    # ② 不足分を抽選（既回答 ID は除外）
+    need = max(0, count - answered_count)
+    new_questions = []
+    if need:
+        new_questions = (GrammarQuestion.objects
+            .filter(subgenre_fk=cycle_session.material, is_active=True)
+            .exclude(id__in=answered_ids)
+            .order_by('?')[:need])
+
+    # ③ ペイロードを組み立て
+    payload = []
+
+    # ---- 既回答パート ----
+    for au in answered_aus:
+        q = au.question
+        payload.append({
+            'id': q.id,
+            'question_text': q.question_text,
+            'answer': q.answer,
+            'genre': q.genre,
+            'subgenre_name': getattr(q.subgenre_fk, 'name', None),
+            'difficulty': q.difficulty,
+            'user_answer': au.user_answer,
+            'feedback': (au.ai_feedback.feedback_text
+                         if getattr(au, 'ai_feedback', None) else None),
+            'grade': (au.evaluation.overall_grade
+                      if getattr(au, 'evaluation', None) else None),
+            'answered': True,
+        })
+
+    # ---- 新規パート ----
+    for q in new_questions:
+        payload.append({
+            'id': q.id,
+            'question_text': q.question_text,
+            'answer': q.answer,
+            'genre': q.genre,
+            'subgenre_name': getattr(q.subgenre_fk, 'name', None),
+            'difficulty': q.difficulty,
+            'user_answer': None,
+            'feedback': None,
+            'grade': None,
+            'answered': False,
+        })
+
+    return payload

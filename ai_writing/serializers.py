@@ -87,3 +87,69 @@ class ReviewCandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerUnit
         fields = ['question_id', 'question_text', 'genre', 'subgenre', 'difficulty', 'created_at']
+
+
+
+# ai_writing/serializers.py の末尾に以下を追加
+
+from rest_framework import serializers
+from .models import StraSession, StraCycleSession, GrammarQuestion, GrammarNote
+
+
+class StraSessionSerializer(serializers.ModelSerializer):
+    progress_percentage = serializers.SerializerMethodField()
+    is_completed = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = StraSession
+        fields = [
+            'id', 'user', 'material', 'target_cycles', 'completed_cycles',
+            'status', 'session_date', 'started_at', 'completed_at',
+            'progress_percentage', 'is_completed'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_progress_percentage(self, obj):
+        return obj.progress_percentage
+    
+    def get_is_completed(self, obj):
+        return obj.is_completed
+
+
+class StraCycleSessionSerializer(serializers.ModelSerializer):
+    is_completed = serializers.SerializerMethodField()
+    is_started = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = StraCycleSession
+        fields = [
+            'id', 'stra_session', 'cycle_index', 'material', 'session_id',
+            'started_at', 'completed_at', 'is_completed', 'is_started'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_is_completed(self, obj):
+        return obj.is_completed
+    
+    def get_is_started(self, obj):
+        return obj.is_started
+
+
+class GrammarQuestionSerializer(serializers.ModelSerializer):
+    subgenre_name = serializers.CharField(source='subgenre_fk.name', read_only=True)
+    
+    class Meta:
+        model = GrammarQuestion
+        fields = [
+            'id', 'custom_id', 'question_text', 'genre', 'subgenre_fk',
+            'subgenre_name',  # 追加：Subgenreの名前
+            'level', 'type', 'difficulty', 'importance', 'answer'
+        ]
+
+
+class GrammarNoteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrammarNote
+        fields = [
+            'id', 'custom_id', 'subgenre_fk', 'title', 'description'
+        ]
