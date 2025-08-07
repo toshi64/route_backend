@@ -98,18 +98,27 @@ WSGI_APPLICATION = 'route_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv("SUPABASE_DB_NAME"),
+#         'USER': os.getenv("SUPABASE_DB_USER"),
+#         'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
+#         'HOST': os.getenv("SUPABASE_DB_HOST"),
+#         'PORT': os.getenv("SUPABASE_DB_PORT"),
+#         'OPTIONS': {
+#             'sslmode': 'require',  
+#         },
+#     }
+# }
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv("SUPABASE_DB_NAME"),
-        'USER': os.getenv("SUPABASE_DB_USER"),
-        'PASSWORD': os.getenv("SUPABASE_DB_PASSWORD"),
-        'HOST': os.getenv("SUPABASE_DB_HOST"),
-        'PORT': os.getenv("SUPABASE_DB_PORT"),
-        'OPTIONS': {
-            'sslmode': 'require',  
-        },
-    }
+    "default": dj_database_url.config(
+        env="DATABASE_URL",   # ← .env から読み取る変数名
+        conn_max_age=60,      # 0〜60 秒程度で OK
+        ssl_require=True,     # ?sslmode=require を付けていれば True で問題なし
+    )
 }
 
 

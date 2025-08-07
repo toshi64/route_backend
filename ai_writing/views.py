@@ -666,64 +666,76 @@ from .utils import local_today
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_session(request):
-    """
-    Straセッション開始API
-    
-    フロー:
-    1. 未完了セッション確認
-    2. なければ新規セッション作成
-    3. 次周回のサイクルセッション作成
-    4. 問題5問とGrammarNote取得
-    5. 一括レスポンス
-    """
-    
-    user = request.user
-    today = local_today()  # 03:00切り上げ対応
-    
-    try:
-        with transaction.atomic():
-            # 1. 未完了セッション確認
-            stra_session = get_or_create_today_session(user, today)
-            
-            # 2. 次周回のサイクルセッション作成
-            cycle_session = create_next_cycle_session(stra_session)
-            
-            # 3. 問題とNote取得（既回答を含める）
-            questions_payload = build_questions_with_progress(cycle_session)
-            grammar_note = get_grammar_note(stra_session.material)
-            
-            # 4. レスポンス構築
-            response_data = {
-                'stra_session': StraSessionSerializer(stra_session).data,
-                'stra_cycle_session': StraCycleSessionSerializer(cycle_session).data,
-                'questions': questions_payload,
-                'grammar_note': GrammarNoteSerializer(grammar_note).data if grammar_note else None,
-                'user_info': { 
-                    'id': user.id,
-                    'username': user.username,
-                    'display_name': getattr(user, 'line_display_name', None) or user.username,
-                },
-                'session_info': {
-                    'current_cycle': cycle_session.cycle_index,
-                    'total_cycles': stra_session.target_cycles,
-                    'progress_percentage': stra_session.progress_percentage
-                }
-            }
-            
-            return Response(response_data, status=status.HTTP_200_OK)
-            
-    except ValueError as e:
-        # 完了済みセッションなど、ビジネスロジックエラー
-        return Response(
-            {'error': str(e)}, 
-            status=status.HTTP_409_CONFLICT
-        )
-    except Exception as e:
-        return Response(
-            {'error': f'セッション開始エラー: {str(e)}'}, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    subgenre_id = request.data.get('subgenre_id')
+    if not subgenre_id:
+        return Response({"error": "subgenre_id is required"}, status=400)
 
+    try:
+        material = GrammarSubgenre.objects.get(id=subgenre_id)
+    except GrammarSubgenre.DoesNotExist:
+        return Response({"error": "Grammar subgenre not found"}, status=404)
+
+    try:
+        with transaction.atomic():                                   # ★ 同時 POST 競合対策
+        # 1) 未完了セッションがあるかロック付きで取得
+            session = (StraSession.objects
+                    .select_for_update()
+                    .filter(user=request.user,
+                            material=material,
+                            completed_at__isnull=True)
+                    .first())
+
+            if not session:
+                # 2) 完了済みセッションが既に存在するか
+                completed_exists = StraSession.objects.filter(
+                    user=request.user,
+                    material=material,
+                    completed_at__isnull=False
+                ).exists()
+
+                if completed_exists:
+                    return Response(
+                        {"detail": "本日分の Stra は完了しています。残りの課題に取り組みましょう！"},
+                        status=409
+                    )
+
+                # 4) ここまで来たら初回なので新規発行
+                session = StraSession.objects.create(
+                    user=request.user,
+                    material=material,
+                    session_date=local_today(),
+                    target_cycles=5,
+                    status=StraSession.StatusChoices.ACTIVE,
+                )
+
+            # 5) 未完了 session が確定したので Cycle を取得 / 新規発行
+            cycle_session = create_next_cycle_session(session)
+
+        # 3️⃣ 質問 & GrammarNote 取得（トランザクション外で OK）
+        questions = build_questions_with_progress(cycle_session)
+        grammar_note = get_grammar_note(material)
+
+        return Response({
+            "stra_session":  StraSessionSerializer(session).data,
+            "stra_cycle_session": StraCycleSessionSerializer(cycle_session).data,
+            "questions":     questions,
+            "grammar_note":  GrammarNoteSerializer(grammar_note).data if grammar_note else None,
+               "user_info": {                              # ★ ここを追加
+                 "id":         request.user.id,
+                "username":   request.user.username,
+                "display_name": getattr(request.user, "line_display_name", "") \
+                               or request.user.username,
+                },
+        }, status=200)
+
+    except ValueError as e:      # create_next_cycle_session が投げる “全周回完了” など
+        return Response({'error': str(e)}, status=409)
+    except Exception as e:
+        import traceback, logging
+        logging.exception("start_session unexpected error")
+        return Response({'error': f'セッション開始エラー: {str(e)}'}, status=400)
+
+    
 
 def get_or_create_today_session(user, session_date):
     """
