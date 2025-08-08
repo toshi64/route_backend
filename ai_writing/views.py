@@ -658,15 +658,18 @@ from .models import (
 )
 from .serializers import (
     StraSessionSerializer, StraCycleSessionSerializer,
-    GrammarQuestionSerializer, GrammarNoteSerializer
+    GrammarQuestionSerializer, GrammarNoteSerializer,SessionProgressSerializer,
 )
 from .utils import local_today
+import pprint, logging
+logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_session(request):
     subgenre_id = request.data.get('subgenre_id')
+    
     if not subgenre_id:
         return Response({"error": "subgenre_id is required"}, status=400)
 
@@ -714,12 +717,14 @@ def start_session(request):
         # 3️⃣ 質問 & GrammarNote 取得（トランザクション外で OK）
         questions = build_questions_with_progress(cycle_session)
         grammar_note = get_grammar_note(material)
+        progress_json  = SessionProgressSerializer(session).data
 
         return Response({
             "stra_session":  StraSessionSerializer(session).data,
             "stra_cycle_session": StraCycleSessionSerializer(cycle_session).data,
             "questions":     questions,
             "grammar_note":  GrammarNoteSerializer(grammar_note).data if grammar_note else None,
+            "progress":           progress_json, 
                "user_info": {                              # ★ ここを追加
                  "id":         request.user.id,
                 "username":   request.user.username,

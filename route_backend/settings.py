@@ -116,7 +116,7 @@ import dj_database_url
 DATABASES = {
     "default": dj_database_url.config(
         env="DATABASE_URL",   # ← .env から読み取る変数名
-        conn_max_age=60,      # 0〜60 秒程度で OK
+        conn_max_age=0,      # 0〜60 秒程度で OK
         ssl_require=True,     # ?sslmode=require を付けていれば True で問題なし
     )
 }

@@ -153,3 +153,103 @@ class GrammarNoteSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'custom_id', 'subgenre_fk', 'title', 'description'
         ]
+
+
+
+
+# serializers.py
+from collections import defaultdict
+from rest_framework import serializers
+from .models import StraSession, AnswerUnit
+
+# ────────────────────────────────────────────────────────────
+# 1. 周回履歴用サブシリアライザー
+# ────────────────────────────────────────────────────────────
+class CycleHistorySerializer(serializers.Serializer):
+    cycle           = serializers.IntegerField()
+    overallGrade    = serializers.CharField(allow_null=True)
+    questionGrades  = serializers.ListField(child=serializers.CharField())
+    completedAt     = serializers.DateTimeField()
+
+
+# ────────────────────────────────────────────────────────────
+# 2. セッション進捗シリアライザー（start_session で使用）
+# ────────────────────────────────────────────────────────────
+class SessionProgressSerializer(serializers.ModelSerializer):
+    # モデルに無い値はすべて SerializerMethodField で算出
+    currentCycle       = serializers.SerializerMethodField()
+    totalCycles        = serializers.IntegerField(source='target_cycles')
+    progressPercentage = serializers.SerializerMethodField()
+    cycleHistory       = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = StraSession
+        fields = (
+            'currentCycle',
+            'totalCycles',
+            'progressPercentage',
+            'cycleHistory',
+        )
+
+    # -------------- 単純計算系 -----------------
+    def get_currentCycle(self, obj: StraSession) -> int:
+        # “今取り組む周回” = 完了済み + 1
+        return obj.completed_cycles + 1
+
+    def get_progressPercentage(self, obj: StraSession) -> int:
+        return int(obj.progress_percentage)
+
+    # -------------- 周回履歴 -------------------
+    def get_cycleHistory(self, obj: StraSession):
+        """
+        完了済み StraCycleSession について
+        - 各設問の grade を収集
+        - overallGrade を平均から算出
+        """
+        # 1) AnswerUnit → grade 一括取得（StraSession 経由）
+        aus = (AnswerUnit.objects
+                  .filter(stra_cycle_session__stra_session=obj)
+                  .select_related('evaluation', 'stra_cycle_session')
+                  .values('stra_cycle_session__cycle_index',
+                          'evaluation__overall_grade'))
+
+        buckets = defaultdict(list)   # {cycle_index: ['A','B',...]}
+        for row in aus:
+            if row['evaluation__overall_grade']:
+                buckets[row['stra_cycle_session__cycle_index']].append(
+                    row['evaluation__overall_grade']
+                )
+
+        # 2) 完了済み Cycle を並べ替えて履歴リストを組立
+        history = []
+        cycles = (obj.cycle_sessions
+                    .filter(completed_at__isnull=False)
+                    .order_by('cycle_index'))
+
+        for c in cycles:
+            grades = buckets.get(c.cycle_index, [])
+            history.append({
+                "cycle":          c.cycle_index,
+                "overallGrade":   _letter_avg(grades),
+                "questionGrades": grades,
+                "completedAt":    c.completed_at,
+            })
+
+        return CycleHistorySerializer(history, many=True).data
+
+
+# ────────────────────────────────────────────────────────────
+# 3. レター平均補助関数
+# ────────────────────────────────────────────────────────────
+_letter_map = {'A': 4, 'B': 3, 'C': 2, 'D': 1}
+_inv_letter = {v: k for k, v in _letter_map.items()}
+
+def _letter_avg(grades):
+    """
+    ['A','C','B'] → 最近傍の平均レターを返す
+    grade が空なら None
+    """
+    if not grades:
+        return None
+    score = sum(_letter_map[g] for g in grades) / len(grades)
+    return _inv_letter[round(score)]
