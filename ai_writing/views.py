@@ -435,34 +435,60 @@ def submit_answer(request):
             stra_cycle_session=cycle_session
         ).count()
         
-        # ◆ 改善点: ハードコード排除
+             # ◆ 改善点: ハードコード排除
         target_questions = getattr(cycle_session.stra_session, 'target_cycles', 5)
-        
-        # サイクル完了チェック
+
+        # サイクル完了チェック（初めて完了した瞬間だけ）
         if total_answers >= target_questions and not cycle_session.completed_at:
             cycle_session.completed_at = timezone.now()
             cycle_session.save(update_fields=["completed_at"])
             logger.info(f"Cycle session {cycle_session.id} completed with {total_answers} answers")
 
-    # 成功時のレスポンス
-    response_data = {
-        'ai_feedback': feedback_text,
-        'answer_unit_id': answer_unit.id,
-        'grade': grade,
-        'cycle_completed': bool(cycle_session.completed_at),
-        'total_answers': total_answers,
-        'target_questions': target_questions,
-        'message': 'Successfully processed and saved your answer!',
-    }
-    
-    # デバッグ情報（開発時のみ）
-    if 'attempt' in gpt_result:  # 修正2: dict判定修正
-        response_data['debug_info'] = {
-            'attempts_used': gpt_result.get('attempt', 1),
-            'raw_response_length': len(gpt_result.get('raw_response', ''))
-        }
+            stra_session = cycle_session.stra_session
+            logger.info(
+                f"[DEBUG] Before increment: "
+                f"stra_session.id={stra_session.id}, "
+                f"completed_cycles={stra_session.completed_cycles}, "
+                f"target_cycles={stra_session.target_cycles}, "
+                f"total_answers={total_answers}"
+            )
 
-    return Response(response_data, status=200)
+            # 全サイクル到達した場合のみ、ステータス更新とAssignment完了処理
+            if stra_session.completed_cycles == stra_session.target_cycles:
+                stra_session.status = StraSession.StatusChoices.COMPLETED
+                stra_session.completed_at = timezone.now()
+                stra_session.save(update_fields=["completed_cycles", "status", "completed_at"])
+
+                try:
+                    from assignment.services import complete_assignment_item
+                    item = stra_session.assignment_items.first()
+                    complete_assignment_item(item.id, user)
+                    logger.info(f"[DEBUG] complete_assignment_item called for item {item.id}")
+                except Exception as e:
+                    logger.exception(f"[ERROR] Assignment completion skipped for stra_session {stra_session.id}")
+
+      
+
+
+        # 成功時のレスポンス
+        response_data = {
+            'ai_feedback': feedback_text,
+            'answer_unit_id': answer_unit.id,
+            'grade': grade,
+            'cycle_completed': bool(cycle_session.completed_at),
+            'total_answers': total_answers,
+            'target_questions': target_questions,
+            'message': 'Successfully processed and saved your answer!',
+        }
+        
+        # デバッグ情報（開発時のみ）
+        if 'attempt' in gpt_result:  # 修正2: dict判定修正
+            response_data['debug_info'] = {
+                'attempts_used': gpt_result.get('attempt', 1),
+                'raw_response_length': len(gpt_result.get('raw_response', ''))
+            }
+
+        return Response(response_data, status=200)
 
 
 @api_view(['GET'])
@@ -651,6 +677,9 @@ from django.utils import timezone
 from django.db import transaction
 import random
 import uuid
+from orchestrator.services import fetch_or_create_current_assignment_for_user
+from assignment.models import DailyAssignmentItem
+from .utils import local_today  # 既にあればそのまま
 
 from .models import (
     StraSession, StraCycleSession, GrammarSubgenre, 
@@ -664,45 +693,28 @@ from .utils import local_today
 import pprint, logging
 logger = logging.getLogger(__name__)
 
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_session(request):
-    subgenre_id = request.data.get('subgenre_id')
-    
-    if not subgenre_id:
-        return Response({"error": "subgenre_id is required"}, status=400)
-
     try:
-        material = GrammarSubgenre.objects.get(id=subgenre_id)
-    except GrammarSubgenre.DoesNotExist:
-        return Response({"error": "Grammar subgenre not found"}, status=404)
+        with transaction.atomic():
+            # 0) orchestrator 起点：ユーザーだけで「今やるべき1日の行」を取得/生成
+            da = fetch_or_create_current_assignment_for_user(request.user)
+            if not da:
+                return Response({"detail": "カリキュラムはすべて完了しました。"}, status=200)
 
-    try:
-        with transaction.atomic():                                   # ★ 同時 POST 競合対策
-        # 1) 未完了セッションがあるかロック付きで取得
-            session = (StraSession.objects
-                    .select_for_update()
-                    .filter(user=request.user,
-                            material=material,
-                            completed_at__isnull=True)
-                    .first())
+            # 1) 当日の STRA アイテム → 教材決定（material_id）
+            stra_item = (da.items
+                         .select_for_update()
+                         .filter(component=DailyAssignmentItem.Component.STRA)
+                         .first())
+            if not stra_item or stra_item.material_id is None:
+                return Response({"error": "STRAの教材が未設定です"}, status=409)
 
-            if not session:
-                # 2) 完了済みセッションが既に存在するか
-                completed_exists = StraSession.objects.filter(
-                    user=request.user,
-                    material=material,
-                    completed_at__isnull=False
-                ).exists()
-
-                if completed_exists:
-                    return Response(
-                        {"detail": "本日分の Stra は完了しています。残りの課題に取り組みましょう！"},
-                        status=409
-                    )
-
-                # 4) ここまで来たら初回なので新規発行
+            material = GrammarSubgenre.objects.get(id=stra_item.material_id)
+        
+            # 2) StraSession を DailyAssignmentItem 基準で取得/作成
+            if not stra_item.stra_session:
                 session = StraSession.objects.create(
                     user=request.user,
                     material=material,
@@ -710,35 +722,46 @@ def start_session(request):
                     target_cycles=5,
                     status=StraSession.StatusChoices.ACTIVE,
                 )
+                stra_item.stra_session = session
+                if not stra_item.started_at:
+                    stra_item.started_at = timezone.now()
+                stra_item.save(update_fields=["stra_session", "started_at"])
+            else:
+                session = stra_item.stra_session
+            
 
-            # 5) 未完了 session が確定したので Cycle を取得 / 新規発行
+            # ★ 完了済み判定を追加
+            if stra_item.status == DailyAssignmentItem.Status.COMPLETED:
+                return Response({
+                    "detail": "Straは完了済みです。未完了の課題に取り組んでください。"
+                }, status=409)
+
+            # 3) 次の周回 Cycle を用意
             cycle_session = create_next_cycle_session(session)
 
-        # 3️⃣ 質問 & GrammarNote 取得（トランザクション外で OK）
+        # 4) トランザクション外（既存関数名のまま）
         questions = build_questions_with_progress(cycle_session)
         grammar_note = get_grammar_note(material)
-        progress_json  = SessionProgressSerializer(session).data
+        progress_json = SessionProgressSerializer(session).data
 
         return Response({
+            "assignment_id": da.id,            # 完了APIで使える
+            "order_index": da.order_index,     # 進捗UIで使える
             "stra_session":  StraSessionSerializer(session).data,
             "stra_cycle_session": StraCycleSessionSerializer(cycle_session).data,
             "questions":     questions,
             "grammar_note":  GrammarNoteSerializer(grammar_note).data if grammar_note else None,
-            "progress":           progress_json, 
-               "user_info": {                              # ★ ここを追加
-                 "id":         request.user.id,
-                "username":   request.user.username,
-                "display_name": getattr(request.user, "line_display_name", "") \
-                               or request.user.username,
-                },
+            "progress":      progress_json,
         }, status=200)
 
-    except ValueError as e:      # create_next_cycle_session が投げる “全周回完了” など
-        return Response({'error': str(e)}, status=409)
+    except GrammarSubgenre.DoesNotExist:
+        return Response({"error": "Grammar subgenre not found"}, status=404)
+    except ValueError as e:
+        # create_next_cycle_session が「セッション完了」を投げた場合など
+        return Response({"error": str(e)}, status=409)
     except Exception as e:
-        import traceback, logging
-        logging.exception("start_session unexpected error")
-        return Response({'error': f'セッション開始エラー: {str(e)}'}, status=400)
+        import logging; logging.exception("start_session unexpected error")
+        return Response({"error": f"セッション開始エラー: {str(e)}"}, status=400)
 
     
 

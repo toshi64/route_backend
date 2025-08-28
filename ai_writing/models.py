@@ -400,10 +400,12 @@ class StraCycleSession(models.Model):
     def save(self, *args, **kwargs):
         """保存時の自動処理"""
         # session_idの自動生成（未設定時）
-        if not self.session_id:
-            self.session_id = f"stra_{self.material.id}_user{self.stra_session.user.id}_cycle{self.cycle_index}"
-        
-        # material_idの自動設定（冗長フィールド）
+        import uuid
+
+        if not self.session_id:  # まだ値がない場合だけ
+            self.session_id = uuid.uuid4().hex
+                
+                # material_idの自動設定（冗長フィールド）
         if not hasattr(self, 'material') or not self.material:
             self.material = self.stra_session.material
         

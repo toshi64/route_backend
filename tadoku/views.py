@@ -21,6 +21,13 @@ from django.utils.decorators import method_decorator
 import json
 
 from .models import TadokuSession, TadokuSessionStats
+from django.db import transaction
+from orchestrator.services import fetch_or_create_current_assignment_for_user
+from assignment.models import DailyAssignmentItem
+from assignment.services import complete_assignment_item
+
+import logging
+logger = logging.getLogger(__name__)
 
 @require_http_methods(["POST"])
 def get_material_data(request):
@@ -100,43 +107,51 @@ from .models import TadokuSession, Material, TadokuSessionStats
 @permission_classes([IsAuthenticated])
 def start_session(request):
     try:
-        # リクエストデータ取得
-        material_id = request.data.get('material_id')
-        if not material_id:
-            return Response(
-                {"error": "material_id is required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # 教材取得
-        try:
-            material = Material.objects.get(id=material_id)
-        except Material.DoesNotExist:
-            return Response(
-                {"error": "Material not found"}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # learning_context_id 生成（Phase1用）
-        learning_context_id = f"legacy-{material_id}"
-        
-        # セッション取得または作成
-        session, created = TadokuSession.objects.get_or_create(
-            user=request.user,
-            learning_context_id=learning_context_id,
-            defaults={
-                'material': material,
-                'session_date': date.today(),
-                'target_cycles': 5,
-                'status': 'active',
-                'started_at': timezone.now()
-            }
-        )
-        
-        # 既存セッションの場合、最終アクセス時間更新
-        if not created:
-            session.updated_at = timezone.now()
-            session.save(update_fields=['updated_at'])
+        with transaction.atomic():
+            # 0) orchestrator 起点：ユーザーだけで「今やるべき1日の行」を取得/生成
+            da = fetch_or_create_current_assignment_for_user(request.user)
+            if not da:
+                return Response({"detail": "カリキュラムはすべて完了しました。"},
+                                status=status.HTTP_200_OK)
+
+            # 1) 当日の TADOKU アイテムを取得
+            tadoku_item = (da.items
+                           .select_for_update()
+                           .filter(component=DailyAssignmentItem.Component.TADOKU)
+                           .first())
+            if not tadoku_item or tadoku_item.material_id is None:
+                return Response({"error": "TADOKUの教材が未設定です"},
+                                status=status.HTTP_409_CONFLICT)
+
+            try:
+                material = Material.objects.get(id=tadoku_item.material_id)
+            except Material.DoesNotExist:
+                return Response({"error": "Material not found"},
+                                status=status.HTTP_404_NOT_FOUND)
+            
+            # 2) 既存セッション再利用 or 新規作成
+            if not tadoku_item.tadoku_session:
+                session = TadokuSession.objects.create(
+                    user=request.user,
+                    learning_context_id=f"legacy-{material.id}",
+                    material=material,
+                    session_date=date.today(),
+                    target_cycles=5,
+                    status='active',
+                    started_at=timezone.now(),
+                )
+                tadoku_item.tadoku_session = session
+                if not tadoku_item.started_at:
+                    tadoku_item.started_at = timezone.now()
+                tadoku_item.save(update_fields=["tadoku_session", "started_at"])
+            else:
+                session = tadoku_item.tadoku_session
+
+            if tadoku_item.status == DailyAssignmentItem.Status.COMPLETED:
+                return Response({
+                    "detail": "Tadokuは完了済みです。未完了の課題に取り組んでください。"
+                }, status=status.HTTP_200_OK)
+
         
         # 統計データ取得
         session_stats = TadokuSessionStats.objects.filter(
@@ -224,7 +239,6 @@ def start_session(request):
                 "summary": stats_summary
             },
             "context": {
-                "is_new_session": created,
                 "last_accessed": session.updated_at.isoformat()
             }
         }, status=status.HTTP_200_OK)
@@ -236,15 +250,18 @@ def start_session(request):
         )
 
 
-
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 @api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
+@permission_classes([])
+# @permission_classes([IsAuthenticated])
 def complete_cycle(request, session_id):
    """
    周回完了時のSTTデータを記録するAPI
    """
    try:
+       request.user = User.objects.get(id=9)
        # セッション取得
        session = get_object_or_404(TadokuSession, id=session_id, user=request.user)
        
@@ -277,6 +294,14 @@ def complete_cycle(request, session_id):
        # セッションの completed_cycles を更新
        session.completed_cycles = next_cycle
        session.save()
+
+        # セッションの完了を、assignmentアプリに通知。こちらでdaily assignmentが更新される。
+       if session.completed_cycles >= session.target_cycles:
+        item = session.assignment_items.first()  # 1:1想定
+        if item and item.status != "completed":
+            complete_assignment_item(item_id=item.id, user=request.user)
+            logger.info(f"Tadoku completed → AssignmentItem {item.id} marked completed")
+
        
        # レスポンス
        return Response({

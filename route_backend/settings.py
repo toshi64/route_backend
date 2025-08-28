@@ -62,6 +62,10 @@ INSTALLED_APPS = [
     'material_scheduler',
     'grammarQuestions_import_from_csv',
     'tadoku', 
+    'orchestrator', 
+    'curriculum',
+    'assignment',
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -146,7 +150,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "Asia/Tokyo"
 
 USE_I18N = True
 

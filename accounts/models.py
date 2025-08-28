@@ -1,6 +1,7 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 
 class CustomUser(AbstractUser):
@@ -31,3 +32,18 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+
+
+# account/models.py
+class Enrollment(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE="active","Active"; ARCHIVED="archived","Archived"
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="enrollments", db_index=True)
+    curriculum_id = models.CharField(max_length=64, db_index=True)
+    status = models.CharField(max_length=8, choices=Status.choices, default=Status.ACTIVE, db_index=True)
+    start_date = models.DateField(null=True, blank=True)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        constraints=[models.UniqueConstraint(fields=["user"],condition=models.Q(status="active"),name="uniq_active_enrollment_per_user")]
