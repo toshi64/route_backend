@@ -135,6 +135,8 @@ def build_streak(raw):
 
     return {"streak_days": streak}
 
+
+
 def build_calendar(raw):
     """カレンダー形式の学習状況"""
     today = str(date.today())
@@ -159,6 +161,34 @@ def build_calendar(raw):
 
     return calendar
 
+def build_curriculum(raw):
+    """
+    カリキュラム表UI用データを生成する
+    Day番号・Stra教材名・Tadoku教材名・statusを含める
+    """
+    curriculum = []
+
+    for idx, a in enumerate(raw["assignments"], start=1):
+        stra_name = None
+        tadoku_name = None
+
+        for item in a["items"]:
+            if item["component"] == "stra" and item["stra_session"]:
+                stra_name = item["stra_session"].get("material_name")
+            if item["component"] == "tadoku" and item["tadoku_session"]:
+                tadoku_name = item["tadoku_session"].get("material_title")
+
+        curriculum.append({
+            "id": a["id"],
+            "day": idx,
+            "stra_name": stra_name or "未設定",
+            "tadoku_name": tadoku_name or "未設定",
+            "status": a["status"],   # "completed" / "not_done" など
+            "target_date": a["target_date"],
+        })
+
+    return curriculum
+
 
 # ==========================
 # Summaryビルダー
@@ -170,6 +200,7 @@ def build_summary(raw):
         "progress": build_progress(raw),
         "streak": build_streak(raw),
         "calendar": build_calendar(raw),
+        "curriculum": build_curriculum(raw),
     }
 
 
