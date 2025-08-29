@@ -147,7 +147,7 @@ def start_session(request):
             else:
                 session = tadoku_item.tadoku_session
 
-            if tadoku_item.status == DailyAssignmentItem.Status.COMPLETED:
+            if session.completed_cycles >= session.target_cycles:
                 return Response({
                     "detail": "Tadokuは完了済みです。未完了の課題に取り組んでください。"
                 }, status=status.HTTP_200_OK)

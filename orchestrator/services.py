@@ -15,47 +15,39 @@ class NoActiveEnrollment(Exception):
 
 @transaction.atomic
 def fetch_or_create_current_assignment_for_user(user, *, today=None) -> Optional[DailyAssignment]:
-    """
-    1) ユーザーの active Enrollment を取得
-    2) 未完了(NOT_DONE)の DailyAssignment があれば「最優先の1件」を返す
-       - state.current_order_index に一致する行があればそれを優先
-       - それが無ければ未完了の最小 order_index を返す（遅延がある場合の救済）
-    3) それも無ければ ensure_next_assignment を呼んで新規作成（なければ None）
-    """
     today = today or timezone.localdate()
+    print("fetch_or_create_current_assignment_for_user called", today)
 
     try:
-        # Enrollment は accounts アプリ側
         enr = Enrollment.objects.select_related("state").get(user=user, status="active")
     except ObjectDoesNotExist:
         raise NoActiveEnrollment("Active enrollment not found for user")
 
-    # 2-a) 進捗ポインタを優先（あるなら）
+    # 1) 未完了を探す（order_index優先→なければ最小order_index）
+    da = None
     if getattr(enr, "state", None):
         da = (
             DailyAssignment.objects
             .select_for_update()
-            .filter(
-                enrollment=enr,
-                status=DailyAssignment.Status.NOT_DONE,
-                order_index=enr.state.current_order_index,
-            )
+            .filter(enrollment=enr, status=DailyAssignment.Status.NOT_DONE,
+                    order_index=enr.state.current_order_index)
             .order_by("order_index")
             .first()
         )
-        if da:
-            return da
 
-    # 2-b) 未完了の最小 order（遅延があれば一番手前から）
-    da = (
-        DailyAssignment.objects
-        .select_for_update()
-        .filter(enrollment=enr, status=DailyAssignment.Status.NOT_DONE)
-        .order_by("order_index")
-        .first()
-    )
+    if not da:
+        da = (
+            DailyAssignment.objects
+            .select_for_update()
+            .filter(enrollment=enr, status=DailyAssignment.Status.NOT_DONE)
+            .order_by("order_index")
+            .first()
+        )
+
     if da:
+        print("→ 未完了があるのでそれを返す:", da)
         return da
 
-    # 3) 未完了が無い → 新規を用意（state lazy 初期化は assignment.services に委譲）
+    # 2) 未完了が一つもなければ今日分を新規発行
+    print("→ 未完了なし → ensure_next_assignment() で今日分を発行")
     return ensure_next_assignment(enr, today=today)

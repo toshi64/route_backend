@@ -103,9 +103,13 @@ def ensure_next_assignment(
         },
     )
 
-    # ④ 子アイテム（stra/tadoku）も揃える（idempotent）
-    _ensure_item(da, DailyAssignmentItem.Component.STRA,   item.get("stra_material_id"))
-    _ensure_item(da, DailyAssignmentItem.Component.TADOKU, item.get("tadoku_material_id"))
+    # ④ 子アイテム（stra/tadoku）も揃える
+    stra_item   = _ensure_item(da, DailyAssignmentItem.Component.STRA,   item.get("stra_material_id"))
+    tadoku_item = _ensure_item(da, DailyAssignmentItem.Component.TADOKU, item.get("tadoku_material_id"))
+
+    # ⑤ 各セッションも保証
+    _ensure_session_for_item(enrollment.user, stra_item)
+    _ensure_session_for_item(enrollment.user, tadoku_item)
 
     if created:
         state.last_assigned_at = timezone.now()
@@ -145,6 +149,47 @@ def _ensure_item(
 
     return item
 
+
+
+from ai_writing.models import StraSession
+from tadoku.models import TadokuSession
+from assignment.models import DailyAssignmentItem
+from django.utils import timezone
+from datetime import date
+
+def _ensure_session_for_item(user, item):
+    """
+    DailyAssignmentItem に紐づく Stra/Tadoku セッションを保証する
+    """
+    if item.component == DailyAssignmentItem.Component.STRA:
+        if not item.stra_session and item.material_id:
+            session = StraSession.objects.create(
+                user=user,
+                material_id=item.material_id,
+                session_date=date.today(),
+                target_cycles=5,
+                status=StraSession.StatusChoices.ACTIVE,
+                started_at=timezone.now(),
+            )
+            item.stra_session = session
+            if not item.started_at:
+                item.started_at = timezone.now()
+            item.save(update_fields=["stra_session", "started_at"])
+    elif item.component == DailyAssignmentItem.Component.TADOKU:
+        if not item.tadoku_session and item.material_id:
+            session = TadokuSession.objects.create(
+                user=user,
+                material_id=item.material_id,
+                session_date=date.today(),
+                target_cycles=5,
+                status="active",   # 文字列で直接指定
+                started_at=timezone.now(),
+            )
+
+            item.tadoku_session = session
+            if not item.started_at:
+                item.started_at = timezone.now()
+            item.save(update_fields=["tadoku_session", "started_at"])
 
 
 

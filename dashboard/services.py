@@ -176,7 +176,7 @@ def build_summary(raw):
 # ==========================
 # Rawデータ取得（既存関数を流用）
 # ==========================
-def get_dashboard_raw_context(user):
+def get_dashboard_raw_context(user, ensure_assignment=None):
     """Dashboard用: 生データ全部返す"""
     enrollment = Enrollment.objects.get(user=user, status="active")
     enrollment_state = EnrollmentState.objects.get(enrollment=enrollment)
@@ -188,7 +188,7 @@ def get_dashboard_raw_context(user):
         .order_by("target_date")
     )
 
-    return {
+    raw = {
         "enrollment": {
             "id": enrollment.id,
             "curriculum_id": enrollment.curriculum_id,
@@ -226,7 +226,6 @@ def get_dashboard_raw_context(user):
                                 "total_word_count": i.tadoku_session.material.total_word_count if i.tadoku_session and i.tadoku_session.material else None,
                             } if i.tadoku_session else None
                         ),
-
                     }
                     for i in a.items.all()
                 ],
@@ -234,3 +233,15 @@ def get_dashboard_raw_context(user):
             for a in assignments
         ],
     }
+
+    # ★ orchestrator が返した assignment を raw に強制反映
+    if ensure_assignment and ensure_assignment.id not in [a["id"] for a in raw["assignments"]]:
+        raw["assignments"].append({
+            "id": ensure_assignment.id,
+            "target_date": str(ensure_assignment.target_date),
+            "status": ensure_assignment.status,
+            "completed_at": str(ensure_assignment.completed_at) if ensure_assignment.completed_at else None,
+            "items": []  # 最低限
+        })
+
+    return raw
