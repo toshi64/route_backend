@@ -88,7 +88,9 @@ def build_today(raw):
                     "current": item["stra_session"]["completed_cycles"] if item["stra_session"] else 0,
                     "total": item["stra_session"]["target_cycles"] if item["stra_session"] else 0,
                 },
+                "material_name": item["stra_session"]["material_name"] if item["stra_session"] else None,
             }
+
         elif item["component"] == "tadoku":
             result["tadoku"] = {
                 "completed": item["status"] == "completed",
@@ -96,6 +98,8 @@ def build_today(raw):
                     "current": item["tadoku_session"]["completed_cycles"] if item["tadoku_session"] else 0,
                     "total": item["tadoku_session"]["target_cycles"] if item["tadoku_session"] else 0,
                 },
+                "material_title": item["tadoku_session"]["material_title"] if item["tadoku_session"] else None,
+                "total_word_count": item["tadoku_session"]["total_word_count"] if item["tadoku_session"] else None,
             }
 
     return result
@@ -210,6 +214,7 @@ def get_dashboard_raw_context(user):
                                 "id": i.stra_session.id,
                                 "completed_cycles": i.stra_session.completed_cycles,
                                 "target_cycles": i.stra_session.target_cycles,
+                                "material_name": i.stra_session.material.name if i.stra_session and i.stra_session.material else None,
                             } if i.stra_session else None
                         ),
                         "tadoku_session": (
@@ -217,8 +222,11 @@ def get_dashboard_raw_context(user):
                                 "id": i.tadoku_session.id,
                                 "completed_cycles": i.tadoku_session.completed_cycles,
                                 "target_cycles": i.tadoku_session.target_cycles,
+                                "material_title": i.tadoku_session.material.title if i.tadoku_session and i.tadoku_session.material else None,
+                                "total_word_count": i.tadoku_session.material.total_word_count if i.tadoku_session and i.tadoku_session.material else None,
                             } if i.tadoku_session else None
                         ),
+
                     }
                     for i in a.items.all()
                 ],
